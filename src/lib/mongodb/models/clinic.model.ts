@@ -1,4 +1,5 @@
-import mongoose, { Schema, Document } from 'mongoose';
+// src/lib/mongodb/models/clinic.model.ts
+import mongoose, { Schema, Document, models, model } from 'mongoose';
 
 export interface IClinic extends Document {
   name: string;
@@ -25,5 +26,7 @@ const ClinicSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-// Prevent Mongoose from creating the model multiple times during hot reloads
-export default mongoose.models.Clinic || mongoose.model<IClinic>('Clinic', ClinicSchema);
+// Use a different pattern to check for existing models that works in server components
+const Clinic = models.Clinic || model<IClinic>('Clinic', ClinicSchema);
+
+export default Clinic;
