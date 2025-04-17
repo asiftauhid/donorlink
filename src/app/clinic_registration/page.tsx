@@ -6,7 +6,8 @@ import Link from 'next/link';
 
 type FormData = {
   name: string;
-  location: string;
+  latitude: string;
+  longitude: string;
   email: string;
   phone: string;
   licenseNumber: string;
@@ -25,7 +26,8 @@ export default function ClinicRegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    location: '',
+    latitude: '',
+    longitude: '',
     email: '',
     phone: '',
     licenseNumber: '',
@@ -53,6 +55,22 @@ export default function ClinicRegistrationPage() {
     // Phone validation - simple pattern for illustration
     if (formData.phone && !/^\+?[0-9\s]{8,}$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid phone number.';
+    }
+    
+    // Latitude validation (between -90 and 90)
+    if (formData.latitude) {
+      const lat = parseFloat(formData.latitude);
+      if (isNaN(lat) || lat < -90 || lat > 90) {
+        newErrors.latitude = 'Latitude must be a number between -90 and 90.';
+      }
+    }
+    
+    // Longitude validation (between -180 and 180)
+    if (formData.longitude) {
+      const lng = parseFloat(formData.longitude);
+      if (isNaN(lng) || lng < -180 || lng > 180) {
+        newErrors.longitude = 'Longitude must be a number between -180 and 180.';
+      }
     }
     
     // Password matching
@@ -87,14 +105,32 @@ export default function ClinicRegistrationPage() {
     setIsSubmitting(true);
     
     try {
-      // This would be replaced with your actual API call
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/clinics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          email: formData.email,
+          phone: formData.phone,
+          licenseNumber: formData.licenseNumber,
+          password: formData.password,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
       
       // Success case
       setIsSuccess(true);
       setTimeout(() => {
-        router.push('/clinic-dashboard');
+        router.push('/dashboard/clinic');
       }, 2000);
       
     } catch (error: any) {
@@ -103,6 +139,32 @@ export default function ClinicRegistrationPage() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData(prev => ({
+            ...prev,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString()
+          }));
+        },
+        (error) => {
+          setErrors(prev => ({
+            ...prev,
+            form: 'Unable to get your current location. Please enter coordinates manually.'
+          }));
+          console.error('Error getting location:', error);
+        }
+      );
+    } else {
+      setErrors(prev => ({
+        ...prev,
+        form: 'Geolocation is not supported by your browser. Please enter coordinates manually.'
+      }));
     }
   };
 
@@ -149,20 +211,51 @@ export default function ClinicRegistrationPage() {
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
           </div>
           
-          <div>
-            <label htmlFor="location" className="block text-sm font-medium mb-1 text-gray-800">
-              Location
-            </label>
-            <input
-              id="location"
-              name="location"
-              type="text"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              placeholder="e.g., Zone 5"
-            />
-            {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-medium text-gray-800">Location Coordinates of the Clinic</h3>
+              <button 
+                type="button" 
+                onClick={getCurrentLocation}
+                className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
+              >
+                Use Current Location
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="latitude" className="block text-sm font-medium mb-1 text-gray-800">
+                  Latitude
+                </label>
+                <input
+                  id="latitude"
+                  name="latitude"
+                  type="text"
+                  value={formData.latitude}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                  placeholder="e.g., 24.4667"
+                />
+                {errors.latitude && <p className="mt-1 text-sm text-red-600">{errors.latitude}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="longitude" className="block text-sm font-medium mb-1 text-gray-800">
+                  Longitude
+                </label>
+                <input
+                  id="longitude"
+                  name="longitude"
+                  type="text"
+                  value={formData.longitude}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                  placeholder="e.g., 54.3667"
+                />
+                {errors.longitude && <p className="mt-1 text-sm text-red-600">{errors.longitude}</p>}
+              </div>
+            </div>
           </div>
           
           <div>
