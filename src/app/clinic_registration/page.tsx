@@ -13,6 +13,7 @@ type FormData = {
   licenseNumber: string;
   password: string;
   confirmPassword: string;
+  address: string; // Added address field
 };
 
 type FormErrors = {
@@ -33,6 +34,7 @@ export default function ClinicRegistrationPage() {
     licenseNumber: '',
     password: '',
     confirmPassword: '',
+    address: '', // Added address field
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSuccess, setIsSuccess] = useState(false);
@@ -118,6 +120,7 @@ export default function ClinicRegistrationPage() {
           phone: formData.phone,
           licenseNumber: formData.licenseNumber,
           password: formData.password,
+          address: formData.address, // Include address in the request
         }),
       });
       
@@ -130,7 +133,7 @@ export default function ClinicRegistrationPage() {
       // Success case
       setIsSuccess(true);
       setTimeout(() => {
-        router.push('/dashboard/clinic');
+        router.push('/login');
       }, 2000);
       
     } catch (error: any) {
@@ -209,6 +212,22 @@ export default function ClinicRegistrationPage() {
               className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+          </div>
+          
+          {/* Added Address Field */}
+          <div>
+            <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-800">
+              Clinic Address
+            </label>
+            <input
+              id="address"
+              name="address"
+              type="text"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+            />
+            {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
           </div>
           
           <div className="space-y-4">

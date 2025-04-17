@@ -20,7 +20,9 @@ type DonorFormData = {
   password: string;
   confirmPassword: string;
   bloodType: string;
-  address: string;
+  latitude: string;
+  longitude: string;
+  address: string; // Added address field
 };
 
 // Quiz answers type
@@ -41,7 +43,9 @@ export default function DonorRegistrationPage() {
     password: '',
     confirmPassword: '',
     bloodType: '',
-    address: '',
+    latitude: '',
+    longitude: '',
+    address: '', // Added address field
   });
   const [formErrors, setFormErrors] = useState<Partial<DonorFormData & { form?: string }>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -195,6 +199,33 @@ export default function DonorRegistrationPage() {
     }));
   };
 
+  // Get current location from browser
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData(prev => ({
+            ...prev,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString()
+          }));
+        },
+        (error) => {
+          setFormErrors(prev => ({
+            ...prev,
+            form: 'Unable to get your current location. Please enter coordinates manually.'
+          }));
+          console.error('Error getting location:', error);
+        }
+      );
+    } else {
+      setFormErrors(prev => ({
+        ...prev,
+        form: 'Geolocation is not supported by your browser. Please enter coordinates manually.'
+      }));
+    }
+  };
+
   // Validate the registration form
   const validateForm = (): boolean => {
     const errors: Partial<DonorFormData> = {};
@@ -206,7 +237,9 @@ export default function DonorRegistrationPage() {
     if (!formData.password) errors.password = 'Password is required';
     if (!formData.confirmPassword) errors.confirmPassword = 'Please confirm your password';
     if (!formData.bloodType) errors.bloodType = 'Blood type is required';
-    if (!formData.address.trim()) errors.address = 'Address is required';
+    if (!formData.latitude) errors.latitude = 'Latitude is required';
+    if (!formData.longitude) errors.longitude = 'Longitude is required';
+    if (!formData.address) errors.address = 'Address is required'; // Added address validation
     
     // Email validation
     if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
@@ -216,6 +249,22 @@ export default function DonorRegistrationPage() {
     // Phone validation
     if (formData.phone && !/^\+?[0-9\s]{8,}$/.test(formData.phone)) {
       errors.phone = 'Please enter a valid phone number';
+    }
+    
+    // Latitude validation (between -90 and 90)
+    if (formData.latitude) {
+      const lat = parseFloat(formData.latitude);
+      if (isNaN(lat) || lat < -90 || lat > 90) {
+        errors.latitude = 'Latitude must be a number between -90 and 90';
+      }
+    }
+    
+    // Longitude validation (between -180 and 180)
+    if (formData.longitude) {
+      const lng = parseFloat(formData.longitude);
+      if (isNaN(lng) || lng < -180 || lng > 180) {
+        errors.longitude = 'Longitude must be a number between -180 and 180';
+      }
     }
     
     // Password match validation
@@ -232,31 +281,71 @@ export default function DonorRegistrationPage() {
     return Object.keys(errors).length === 0;
   };
 
-  // Handle registration form submission
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ // Handle registration form submission
+const handleFormSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!validateForm()) {
+    return;
+  }
+  
+  setIsSubmitting(true);
+  
+  try {
+    // Map quiz answers to the format expected by the model
+    const eligibilityQuiz = {
+      age: quizAnswers[1] || '',
+      weight: quizAnswers[2] || '',
+      lastDonation: quizAnswers[3] || '',
+      medicalConditions: quizAnswers[4] || '',
+      medications: quizAnswers[5] || '',
+      recentSurgery: quizAnswers[6] || ''
+    };
     
-    if (!validateForm()) {
-      return;
+    const response = await fetch('/api/donors', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        email: formData.email,
+        phoneNumber: formData.phone, // Changed to match expected model field
+        bloodType: formData.bloodType,
+        location: {
+          coordinates: [
+            parseFloat(formData.longitude), // Note longitude first!
+            parseFloat(formData.latitude)
+          ]
+        },
+        address: formData.address, // Added address
+        password: formData.password,
+        // Add the eligibility quiz data
+        eligibilityQuiz: eligibilityQuiz,
+        // Also add longitude and latitude directly since they're required
+        longitude: parseFloat(formData.longitude),
+        latitude: parseFloat(formData.latitude),
+        phone: formData.phone // Add phone directly as it's required
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Registration failed');
     }
     
-    setIsSubmitting(true);
+    // Success case
+    setStep('success');
     
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Success case
-      setStep('success');
-      
-    } catch (error: any) {
-      setFormErrors({
-        form: error.message || 'An error occurred during registration. Please try again.',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  } catch (error: any) {
+    setFormErrors({
+      form: error.message || 'An error occurred during registration. Please try again.',
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Render quiz step
   if (step === 'quiz') {
@@ -408,6 +497,7 @@ export default function DonorRegistrationPage() {
               {formErrors.bloodType && <p className="mt-1 text-sm text-red-600">{formErrors.bloodType}</p>}
             </div>
             
+            {/* Added Address Field */}
             <div>
               <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-800">
                 Address
@@ -421,6 +511,53 @@ export default function DonorRegistrationPage() {
                 className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
               />
               {formErrors.address && <p className="mt-1 text-sm text-red-600">{formErrors.address}</p>}
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium text-gray-800">Location Coordinates</h3>
+                <button 
+                  type="button" 
+                  onClick={getCurrentLocation}
+                  className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
+                >
+                  Use Current Location
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="latitude" className="block text-sm font-medium mb-1 text-gray-800">
+                    Latitude
+                  </label>
+                  <input
+                    id="latitude"
+                    name="latitude"
+                    type="text"
+                    value={formData.latitude}
+                    onChange={handleFormChange}
+                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                    placeholder="e.g., 24.4667"
+                  />
+                  {formErrors.latitude && <p className="mt-1 text-sm text-red-600">{formErrors.latitude}</p>}
+                </div>
+                
+                <div>
+                  <label htmlFor="longitude" className="block text-sm font-medium mb-1 text-gray-800">
+                    Longitude
+                  </label>
+                  <input
+                    id="longitude"
+                    name="longitude"
+                    type="text"
+                    value={formData.longitude}
+                    onChange={handleFormChange}
+                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                    placeholder="e.g., 54.3667"
+                  />
+                  {formErrors.longitude && <p className="mt-1 text-sm text-red-600">{formErrors.longitude}</p>}
+                </div>
+              </div>
             </div>
             
             <div>
@@ -488,7 +625,7 @@ export default function DonorRegistrationPage() {
             You will be notified when your blood type is needed in your area.
           </p>
           <Link 
-            href="/donor-dashboard" 
+            href="/dashboard/donor" 
             className="bg-[#e56f6f] hover:bg-[#d05a5a] text-white py-3 px-6 rounded-full transition-colors duration-300 inline-block"
           >
             Go to Dashboard

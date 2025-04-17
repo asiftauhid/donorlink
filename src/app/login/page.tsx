@@ -1,11 +1,12 @@
+// src/app/login/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { login, loading: authLoading, user } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -13,6 +14,22 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Check for saved credentials in localStorage if user previously checked "remember me"
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('donorlink_credentials');
+    if (savedCredentials) {
+      try {
+        const { email, userType } = JSON.parse(savedCredentials);
+        setFormData(prev => ({ ...prev, email, userType }));
+        setRememberMe(true);
+      } catch (err) {
+        // Ignore parsing errors
+        localStorage.removeItem('donorlink_credentials');
+      }
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -20,6 +37,10 @@ export default function LoginPage() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleRememberMeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRememberMe(e.target.checked);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,18 +55,21 @@ export default function LoginPage() {
     setError('');
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect based on user type
-      if (formData.userType === 'clinic') {
-        router.push('/dashboard/clinic');
+      // Save to localStorage if "remember me" is checked
+      if (rememberMe) {
+        localStorage.setItem('donorlink_credentials', JSON.stringify({
+          email: formData.email,
+          userType: formData.userType
+        }));
       } else {
-        router.push('/dashboard/donor');
+        localStorage.removeItem('donorlink_credentials');
       }
       
-    } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      // Use the AuthContext login function
+      await login(formData.email, formData.password, formData.userType as 'donor' | 'clinic');
+      
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -68,6 +92,7 @@ export default function LoginPage() {
         )}
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {/* Form fields remain the same */}
           <div className="space-y-4">
             <div>
               <label htmlFor="userType" className="block text-sm font-medium text-gray-800">
@@ -124,6 +149,8 @@ export default function LoginPage() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
+                checked={rememberMe}
+                onChange={handleRememberMeChange}
                 className="h-4 w-4 text-[#e56f6f] focus:ring-[#e56f6f] border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-800">
@@ -141,15 +168,23 @@ export default function LoginPage() {
           <div>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || authLoading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-base font-medium text-white bg-[#e56f6f] hover:bg-[#d05a5a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e56f6f]"
             >
-              {isSubmitting ? 'Logging in...' : 'Log in'}
+              {isSubmitting || authLoading ? 'Logging in...' : 'Log in'}
             </button>
           </div>
         </form>
         
         <div className="text-center mt-4">
+          <div className="mb-4">
+            <span className="text-gray-600">Don't have an account? </span>
+            <Link href={formData.userType === 'donor' ? '/donor_registration' : '/clinic_registration'} 
+                  className="font-medium text-[#e56f6f] hover:text-[#d05a5a]">
+              Register now
+            </Link>
+          </div>
+          
           <Link href="/" className="font-medium text-[#e56f6f] hover:text-[#d05a5a]">
             Back to Home
           </Link>
