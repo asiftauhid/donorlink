@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       licenseNumber,
       password, // Will be hashed by the pre-save hook in the model
       location: {
-        coordinates: [lat, lng] // Note the order: longitude first, then latitude
+        coordinates: [lng, lat] // Note the order: longitude first, then latitude
       },
       address
     });
