@@ -55,7 +55,8 @@ export async function GET(
 ) {
   try {
     // Access the ID from context.params
-    const requestId = context.params.id;
+    // const requestId = context.params.id;
+    const { id: requestId } = await context.params;
     console.log("Received ID:", requestId);
     
     // Get the authenticated user
