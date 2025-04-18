@@ -22,7 +22,7 @@ type DonorFormData = {
   bloodType: string;
   latitude: string;
   longitude: string;
-  address: string; // Added address field
+  address: string;
 };
 
 // Quiz answers type
@@ -45,7 +45,7 @@ export default function DonorRegistrationPage() {
     bloodType: '',
     latitude: '',
     longitude: '',
-    address: '', // Added address field
+    address: '',
   });
   const [formErrors, setFormErrors] = useState<Partial<DonorFormData & { form?: string }>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -239,7 +239,7 @@ export default function DonorRegistrationPage() {
     if (!formData.bloodType) errors.bloodType = 'Blood type is required';
     if (!formData.latitude) errors.latitude = 'Latitude is required';
     if (!formData.longitude) errors.longitude = 'Longitude is required';
-    if (!formData.address) errors.address = 'Address is required'; // Added address validation
+    if (!formData.address) errors.address = 'Address is required';
     
     // Email validation
     if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
@@ -281,134 +281,136 @@ export default function DonorRegistrationPage() {
     return Object.keys(errors).length === 0;
   };
 
- // Handle registration form submission
-const handleFormSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!validateForm()) {
-    return;
-  }
-  
-  setIsSubmitting(true);
-  
-  try {
-    // Map quiz answers to the format expected by the model
-    const eligibilityQuiz = {
-      age: quizAnswers[1] || '',
-      weight: quizAnswers[2] || '',
-      lastDonation: quizAnswers[3] || '',
-      medicalConditions: quizAnswers[4] || '',
-      medications: quizAnswers[5] || '',
-      recentSurgery: quizAnswers[6] || ''
-    };
+  // Handle registration form submission
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    const response = await fetch('/api/donors', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phone, // Changed to match expected model field
-        bloodType: formData.bloodType,
-        location: {
-          coordinates: [
-            parseFloat(formData.longitude), // Note longitude first!
-            parseFloat(formData.latitude)
-          ]
-        },
-        address: formData.address, // Added address
-        password: formData.password,
-        // Add the eligibility quiz data
-        eligibilityQuiz: eligibilityQuiz,
-        // Also add longitude and latitude directly since they're required
-        longitude: parseFloat(formData.longitude),
-        latitude: parseFloat(formData.latitude),
-        phone: formData.phone // Add phone directly as it's required
-      }),
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Registration failed');
+    if (!validateForm()) {
+      return;
     }
     
-    // Success case
-    setStep('success');
+    setIsSubmitting(true);
     
-  } catch (error: any) {
-    setFormErrors({
-      form: error.message || 'An error occurred during registration. Please try again.',
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    try {
+      // Map quiz answers to the format expected by the model
+      const eligibilityQuiz = {
+        age: quizAnswers[1] || '',
+        weight: quizAnswers[2] || '',
+        lastDonation: quizAnswers[3] || '',
+        medicalConditions: quizAnswers[4] || '',
+        medications: quizAnswers[5] || '',
+        recentSurgery: quizAnswers[6] || ''
+      };
+      
+      const response = await fetch('/api/donors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          phoneNumber: formData.phone, // Changed to match expected model field
+          bloodType: formData.bloodType,
+          location: {
+            coordinates: [
+              parseFloat(formData.longitude), // Note longitude first!
+              parseFloat(formData.latitude)
+            ]
+          },
+          address: formData.address,
+          password: formData.password,
+          // Add the eligibility quiz data
+          eligibilityQuiz: eligibilityQuiz,
+          // Also add longitude and latitude directly since they're required
+          longitude: parseFloat(formData.longitude),
+          latitude: parseFloat(formData.latitude),
+          phone: formData.phone // Add phone directly as it's required
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+      
+      // Success case
+      setStep('success');
+      
+    } catch (error: any) {
+      setFormErrors({
+        form: error.message || 'An error occurred during registration. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Render quiz step
   if (step === 'quiz') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#fdf4f2] py-8">
-        <div className="bg-white rounded-3xl shadow-md p-8 max-w-2xl w-full">
-          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Donor Eligibility Quiz</h1>
-          
-          {isEligible === false && (
-            <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md text-center">
-              <p className="font-medium">You are not eligible to donate due to your age requirement.</p>
-              <p className="mt-2">Thank you for your interest in donating blood.</p>
-              <Link href="/" className="mt-4 inline-block text-[#e56f6f] hover:text-[#d05a5a] underline">
-                Return to Home
-              </Link>
-            </div>
-          )}
-          
-          {quizError && (
-            <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
-              {quizError}
-            </div>
-          )}
-          
-          <form onSubmit={handleQuizSubmit} className="space-y-6">
-            {questions.map((q) => (
-              <div key={q.id} className="border border-gray-200 rounded-lg p-4">
-                <p className="font-medium mb-3 text-gray-800">
-                  {q.question} {q.required && <span className="text-red-500">*</span>}
-                </p>
-                <div className="space-y-2">
-                  {q.options.map((option) => (
-                    <label key={option.value} className="flex items-center space-x-2 text-gray-800">
-                      <input
-                        type="radio"
-                        name={`question-${q.id}`}
-                        value={option.value}
-                        checked={quizAnswers[q.id] === option.value}
-                        onChange={() => handleQuizAnswerChange(q.id, option.value)}
-                        className="h-4 w-4 text-[#e56f6f] focus:ring-[#e56f6f]"
-                      />
-                      <span>{option.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-3xl shadow-md p-8">
+            <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Donor Eligibility Quiz</h1>
             
-            <div className="flex justify-between">
-              <Link
-                href="/"
-                className="px-6 py-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors text-gray-800"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                className="bg-[#e56f6f] hover:bg-[#d05a5a] text-white py-2 px-6 rounded-full transition-colors duration-300"
-              >
-                Submit
-              </button>
-            </div>
-          </form>
+            {isEligible === false && (
+              <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md text-center">
+                <p className="font-medium">You are not eligible to donate due to your age requirement.</p>
+                <p className="mt-2">Thank you for your interest in donating blood.</p>
+                <Link href="/" className="mt-4 inline-block text-red-600 hover:text-red-700 underline">
+                  Return to Home
+                </Link>
+              </div>
+            )}
+            
+            {quizError && (
+              <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
+                {quizError}
+              </div>
+            )}
+            
+            <form onSubmit={handleQuizSubmit} className="space-y-6">
+              {questions.map((q) => (
+                <div key={q.id} className="border border-gray-200 rounded-lg p-4">
+                  <p className="font-medium mb-3 text-gray-800">
+                    {q.question} {q.required && <span className="text-red-500">*</span>}
+                  </p>
+                  <div className="space-y-2">
+                    {q.options.map((option) => (
+                      <label key={option.value} className="flex items-center space-x-2 text-gray-800">
+                        <input
+                          type="radio"
+                          name={`question-${q.id}`}
+                          value={option.value}
+                          checked={quizAnswers[q.id] === option.value}
+                          onChange={() => handleQuizAnswerChange(q.id, option.value)}
+                          className="h-4 w-4 text-red-600 focus:ring-red-600 border-gray-300"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              
+              <div className="flex justify-between">
+                <Link
+                  href="/"
+                  className="px-6 py-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors text-gray-800"
+                >
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  className="bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-full transition-colors duration-300"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     );
@@ -417,196 +419,197 @@ const handleFormSubmit = async (e: React.FormEvent) => {
   // Render registration form step
   if (step === 'registration') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#fdf4f2] py-8">
-        <div className="bg-white rounded-3xl shadow-md p-8 max-w-xl w-full">
-          <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Donor Registration</h1>
-          
-          {formErrors.form && (
-            <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
-              {formErrors.form}
-            </div>
-          )}
-          
-          <form onSubmit={handleFormSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium mb-1 text-gray-800">
-                Full Name
-              </label>
-              <input
-                id="fullName"
-                name="fullName"
-                type="text"
-                value={formData.fullName}
-                onChange={handleFormChange}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              />
-              {formErrors.fullName && <p className="mt-1 text-sm text-red-600">{formErrors.fullName}</p>}
-            </div>
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white py-8">
+        <div className="max-w-xl mx-auto px-4">
+          <div className="bg-white rounded-3xl shadow-md p-8">
+            <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Donor Registration</h1>
             
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-800">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleFormChange}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              />
-              {formErrors.email && <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>}
-            </div>
+            {formErrors.form && (
+              <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
+                {formErrors.form}
+              </div>
+            )}
             
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-800">
-                Phone Number
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleFormChange}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              />
-              {formErrors.phone && <p className="mt-1 text-sm text-red-600">{formErrors.phone}</p>}
-            </div>
-            
-            <div>
-              <label htmlFor="bloodType" className="block text-sm font-medium mb-1 text-gray-800">
-                Blood Type
-              </label>
-              <select
-                id="bloodType"
-                name="bloodType"
-                value={formData.bloodType}
-                onChange={handleFormChange}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              >
-                <option value="">Select blood type</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-              </select>
-              {formErrors.bloodType && <p className="mt-1 text-sm text-red-600">{formErrors.bloodType}</p>}
-            </div>
-            
-            {/* Added Address Field */}
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-800">
-                Address
-              </label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                value={formData.address}
-                onChange={handleFormChange}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              />
-              {formErrors.address && <p className="mt-1 text-sm text-red-600">{formErrors.address}</p>}
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium text-gray-800">Location Coordinates</h3>
-                <button 
-                  type="button" 
-                  onClick={getCurrentLocation}
-                  className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
-                >
-                  Use Current Location
-                </button>
+            <form onSubmit={handleFormSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="fullName" className="block text-sm font-medium mb-1 text-gray-800">
+                  Full Name
+                </label>
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  value={formData.fullName}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                />
+                {formErrors.fullName && <p className="mt-1 text-sm text-red-600">{formErrors.fullName}</p>}
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="latitude" className="block text-sm font-medium mb-1 text-gray-800">
-                    Latitude
-                  </label>
-                  <input
-                    id="latitude"
-                    name="latitude"
-                    type="text"
-                    value={formData.latitude}
-                    onChange={handleFormChange}
-                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-                    placeholder="e.g., 24.4667"
-                  />
-                  {formErrors.latitude && <p className="mt-1 text-sm text-red-600">{formErrors.latitude}</p>}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-800">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                />
+                {formErrors.email && <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-800">
+                  Phone Number
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                />
+                {formErrors.phone && <p className="mt-1 text-sm text-red-600">{formErrors.phone}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="bloodType" className="block text-sm font-medium mb-1 text-gray-800">
+                  Blood Type
+                </label>
+                <select
+                  id="bloodType"
+                  name="bloodType"
+                  value={formData.bloodType}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                >
+                  <option value="">Select blood type</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+                {formErrors.bloodType && <p className="mt-1 text-sm text-red-600">{formErrors.bloodType}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-800">
+                  Address
+                </label>
+                <input
+                  id="address"
+                  name="address"
+                  type="text"
+                  value={formData.address}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                />
+                {formErrors.address && <p className="mt-1 text-sm text-red-600">{formErrors.address}</p>}
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-medium text-gray-800">Location Coordinates</h3>
+                  <button 
+                    type="button" 
+                    onClick={getCurrentLocation}
+                    className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
+                  >
+                    Use Current Location
+                  </button>
                 </div>
                 
-                <div>
-                  <label htmlFor="longitude" className="block text-sm font-medium mb-1 text-gray-800">
-                    Longitude
-                  </label>
-                  <input
-                    id="longitude"
-                    name="longitude"
-                    type="text"
-                    value={formData.longitude}
-                    onChange={handleFormChange}
-                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-                    placeholder="e.g., 54.3667"
-                  />
-                  {formErrors.longitude && <p className="mt-1 text-sm text-red-600">{formErrors.longitude}</p>}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="latitude" className="block text-sm font-medium mb-1 text-gray-800">
+                      Latitude
+                    </label>
+                    <input
+                      id="latitude"
+                      name="latitude"
+                      type="text"
+                      value={formData.latitude}
+                      onChange={handleFormChange}
+                      className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                      placeholder="e.g., 24.4667"
+                    />
+                    {formErrors.latitude && <p className="mt-1 text-sm text-red-600">{formErrors.latitude}</p>}
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="longitude" className="block text-sm font-medium mb-1 text-gray-800">
+                      Longitude
+                    </label>
+                    <input
+                      id="longitude"
+                      name="longitude"
+                      type="text"
+                      value={formData.longitude}
+                      onChange={handleFormChange}
+                      className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                      placeholder="e.g., 54.3667"
+                    />
+                    {formErrors.longitude && <p className="mt-1 text-sm text-red-600">{formErrors.longitude}</p>}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1 text-gray-800">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleFormChange}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              />
-              {formErrors.password && <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>}
-            </div>
-            
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1 text-gray-800">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleFormChange}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              />
-              {formErrors.confirmPassword && <p className="mt-1 text-sm text-red-600">{formErrors.confirmPassword}</p>}
-            </div>
-            
-            <div className="flex justify-between">
-              <button
-                type="button"
-                onClick={() => setStep('quiz')}
-                className="px-6 py-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors text-gray-800"
-              >
-                Back to Quiz
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-[#e56f6f] hover:bg-[#d05a5a] text-white py-2 px-6 rounded-full transition-colors duration-300"
-              >
-                {isSubmitting ? 'Registering...' : 'Register'}
-              </button>
-            </div>
-          </form>
+              
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium mb-1 text-gray-800">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                />
+                {formErrors.password && <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>}
+              </div>
+              
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1 text-gray-800">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleFormChange}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                />
+                {formErrors.confirmPassword && <p className="mt-1 text-sm text-red-600">{formErrors.confirmPassword}</p>}
+              </div>
+              
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  onClick={() => setStep('quiz')}
+                  className="px-6 py-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors text-gray-800"
+                >
+                  Back to Quiz
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-full transition-colors duration-300"
+                >
+                  {isSubmitting ? 'Registering...' : 'Register'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     );
@@ -615,8 +618,13 @@ const handleFormSubmit = async (e: React.FormEvent) => {
   // Render success step
   if (step === 'success') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#fdf4f2]">
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center">
         <div className="bg-white rounded-3xl shadow-md p-8 max-w-xl w-full text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
           <h2 className="text-2xl font-bold text-green-600 mb-4">Registration Successful!</h2>
           <p className="mb-6 text-gray-800">
             Congratulations! Your donor profile has been created. You are now part of the DonorLink community.
@@ -626,7 +634,7 @@ const handleFormSubmit = async (e: React.FormEvent) => {
           </p>
           <Link 
             href="/dashboard/donor" 
-            className="bg-[#e56f6f] hover:bg-[#d05a5a] text-white py-3 px-6 rounded-full transition-colors duration-300 inline-block"
+            className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-full transition-colors duration-300 inline-block"
           >
             Go to Dashboard
           </Link>

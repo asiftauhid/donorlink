@@ -83,9 +83,9 @@ export default function RequestBloodPage() {
   // Show loading state while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-red-50 to-white">
         <div className="text-center">
-          <svg className="animate-spin h-8 w-8 mx-auto text-[#e56f6f]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-8 w-8 mx-auto text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -101,40 +101,40 @@ export default function RequestBloodPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white">
       {/* Top Navigation */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">DonorLink</h1>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-800">{user.name}</span>
-            <Link 
-              href="/dashboard/clinic"
-              className="text-gray-600 hover:text-gray-900 text-sm font-medium"
-            >
-              Dashboard
-            </Link>
-          </div>
+      <nav className="px-6 py-4 flex items-center justify-between bg-white shadow">
+        <div className="flex items-center">
+          <div className="text-red-600 font-bold text-2xl">DonorLink</div>
         </div>
-      </header>
+        <div className="flex items-center space-x-4">
+          <span className="text-gray-800">{user.name}</span>
+          <Link 
+            href="/dashboard/clinic"
+            className="bg-white hover:bg-gray-50 text-red-600 font-medium py-2 px-6 rounded-full border border-red-200 shadow-sm transition-all duration-300 hover:shadow-md"
+          >
+            Dashboard
+          </Link>
+        </div>
+      </nav>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow p-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-white rounded-3xl shadow-md p-8">
           <div className="border-b border-gray-200 pb-4">
-            <h2 className="text-xl font-medium text-gray-800">Request Blood</h2>
-            <p className="mt-1 text-sm text-gray-500">
+            <h2 className="text-2xl font-bold text-gray-800">Request Blood</h2>
+            <p className="mt-1 text-gray-600">
               Fill in the details to request blood donations from available donors.
             </p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mt-4 mb-4 text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mt-6 mb-4 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div>
               <label htmlFor="bloodType" className="block text-sm font-medium text-gray-700">
                 Blood Type
@@ -209,16 +209,14 @@ export default function RequestBloodPage() {
             <div className="flex items-center justify-between pt-4">
               <Link
                 href="/dashboard/clinic"
-                className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                className="text-gray-600 hover:text-gray-900 font-medium"
               >
                 Cancel
               </Link>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`bg-[#e56f6f] hover:bg-[#d05a5a] border-gray-300 text-white py-2 px-6 rounded-full transition-colors duration-300 ${
-                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
+                className="bg-red-600 hover:bg-red-700 text-white py-2 px-8 rounded-full shadow-md transition-colors duration-300 font-medium disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Request'}
               </button>
