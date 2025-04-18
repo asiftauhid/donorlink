@@ -1,4 +1,3 @@
-// src/app/login/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -76,7 +75,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fdf4f2] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="bg-white rounded-3xl shadow-md p-8 max-w-md w-full space-y-8">
         <div>
           <h1 className="text-center text-3xl font-bold text-gray-800">Log in to DonorLink</h1>
@@ -92,7 +91,6 @@ export default function LoginPage() {
         )}
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {/* Form fields remain the same */}
           <div className="space-y-4">
             <div>
               <label htmlFor="userType" className="block text-sm font-medium text-gray-800">
@@ -103,7 +101,7 @@ export default function LoginPage() {
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
-                className="mt-1 block w-full pl-3 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-[#e56f6f] focus:border-[#e56f6f] text-gray-800"
+                className="mt-1 block w-full pl-3 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-red-600 focus:border-red-600 text-gray-800"
               >
                 <option value="donor">Donor</option>
                 <option value="clinic">Clinic</option>
@@ -122,7 +120,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#e56f6f] focus:border-[#e56f6f] text-gray-800"
+                className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-600 focus:border-red-600 text-gray-800"
               />
             </div>
             
@@ -138,7 +136,7 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#e56f6f] focus:border-[#e56f6f] text-gray-800"
+                className="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-600 focus:border-red-600 text-gray-800"
               />
             </div>
           </div>
@@ -151,7 +149,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={handleRememberMeChange}
-                className="h-4 w-4 text-[#e56f6f] focus:ring-[#e56f6f] border-gray-300 rounded"
+                className="h-4 w-4 text-red-600 focus:ring-red-600 border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-800">
                 Remember me
@@ -159,7 +157,7 @@ export default function LoginPage() {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-[#e56f6f] hover:text-[#d05a5a]">
+              <a href="#" className="font-medium text-red-600 hover:text-red-700">
                 Forgot your password?
               </a>
             </div>
@@ -169,7 +167,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting || authLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-base font-medium text-white bg-[#e56f6f] hover:bg-[#d05a5a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e56f6f]"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
             >
               {isSubmitting || authLoading ? 'Logging in...' : 'Log in'}
             </button>
@@ -180,12 +178,12 @@ export default function LoginPage() {
           <div className="mb-4">
             <span className="text-gray-600">Don't have an account? </span>
             <Link href={formData.userType === 'donor' ? '/donor_registration' : '/clinic_registration'} 
-                  className="font-medium text-[#e56f6f] hover:text-[#d05a5a]">
+                  className="font-medium text-red-600 hover:text-red-700">
               Register now
             </Link>
           </div>
           
-          <Link href="/" className="font-medium text-[#e56f6f] hover:text-[#d05a5a]">
+          <Link href="/" className="font-medium text-red-600 hover:text-red-700">
             Back to Home
           </Link>
         </div>

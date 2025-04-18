@@ -13,7 +13,7 @@ type FormData = {
   licenseNumber: string;
   password: string;
   confirmPassword: string;
-  address: string; // Added address field
+  address: string;
 };
 
 type FormErrors = {
@@ -34,7 +34,7 @@ export default function ClinicRegistrationPage() {
     licenseNumber: '',
     password: '',
     confirmPassword: '',
-    address: '', // Added address field
+    address: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSuccess, setIsSuccess] = useState(false);
@@ -120,7 +120,7 @@ export default function ClinicRegistrationPage() {
           phone: formData.phone,
           licenseNumber: formData.licenseNumber,
           password: formData.password,
-          address: formData.address, // Include address in the request
+          address: formData.address,
         }),
       });
       
@@ -173,14 +173,19 @@ export default function ClinicRegistrationPage() {
 
   if (isSuccess) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#fdf4f2]">
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center">
         <div className="bg-white rounded-3xl shadow-md p-8 max-w-xl w-full text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
           <h2 className="text-2xl font-bold text-green-600 mb-4">Registration Successful!</h2>
           <p className="mb-6 text-gray-800">
             Congratulations! {formData.name} is successfully registered to DonorLink.
           </p>
           <p className="text-sm text-gray-600 mb-4">
-            Redirecting to dashboard...
+            Redirecting to login...
           </p>
         </div>
       </div>
@@ -188,187 +193,188 @@ export default function ClinicRegistrationPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#fdf4f2] py-8">
-      <div className="bg-white rounded-3xl shadow-md p-8 max-w-xl w-full">
-        <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Clinic Registration</h1>
-        
-        {errors.form && (
-          <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
-            {errors.form}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-1 text-gray-800">
-              Clinic Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white py-8">
+      <div className="max-w-xl mx-auto px-4">
+        <div className="bg-white rounded-3xl shadow-md p-8">
+          <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Clinic Registration</h1>
           
-          {/* Added Address Field */}
-          <div>
-            <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-800">
-              Clinic Address
-            </label>
-            <input
-              id="address"
-              name="address"
-              type="text"
-              value={formData.address}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-            />
-            {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
-          </div>
+          {errors.form && (
+            <div className="p-4 mb-6 bg-red-100 text-red-700 rounded-md">
+              {errors.form}
+            </div>
+          )}
           
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-medium text-gray-800">Location Coordinates of the Clinic</h3>
-              <button 
-                type="button" 
-                onClick={getCurrentLocation}
-                className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-1 text-gray-800">
+                Clinic Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+              />
+              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-800">
+                Clinic Address
+              </label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                value={formData.address}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+              />
+              {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-medium text-gray-800">Location Coordinates of the Clinic</h3>
+                <button 
+                  type="button" 
+                  onClick={getCurrentLocation}
+                  className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700"
+                >
+                  Use Current Location
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="latitude" className="block text-sm font-medium mb-1 text-gray-800">
+                    Latitude
+                  </label>
+                  <input
+                    id="latitude"
+                    name="latitude"
+                    type="text"
+                    value={formData.latitude}
+                    onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                    placeholder="e.g., 24.4667"
+                  />
+                  {errors.latitude && <p className="mt-1 text-sm text-red-600">{errors.latitude}</p>}
+                </div>
+                
+                <div>
+                  <label htmlFor="longitude" className="block text-sm font-medium mb-1 text-gray-800">
+                    Longitude
+                  </label>
+                  <input
+                    id="longitude"
+                    name="longitude"
+                    type="text"
+                    value={formData.longitude}
+                    onChange={handleChange}
+                    className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                    placeholder="e.g., 54.3667"
+                  />
+                  {errors.longitude && <p className="mt-1 text-sm text-red-600">{errors.longitude}</p>}
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-800">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+              />
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-800">
+                Phone Number
+              </label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+                placeholder="+9715********"
+              />
+              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="licenseNumber" className="block text-sm font-medium mb-1 text-gray-800">
+                License Number
+              </label>
+              <input
+                id="licenseNumber"
+                name="licenseNumber"
+                type="text"
+                value={formData.licenseNumber}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+              />
+              {errors.licenseNumber && <p className="mt-1 text-sm text-red-600">{errors.licenseNumber}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium mb-1 text-gray-800">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+              />
+              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1 text-gray-800">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
+              />
+              {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
+            </div>
+            
+            <div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-full transition-colors duration-300 font-medium"
               >
-                Use Current Location
+                {isSubmitting ? 'Registering...' : 'Register Clinic'}
               </button>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="latitude" className="block text-sm font-medium mb-1 text-gray-800">
-                  Latitude
-                </label>
-                <input
-                  id="latitude"
-                  name="latitude"
-                  type="text"
-                  value={formData.latitude}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-                  placeholder="e.g., 24.4667"
-                />
-                {errors.latitude && <p className="mt-1 text-sm text-red-600">{errors.latitude}</p>}
-              </div>
-              
-              <div>
-                <label htmlFor="longitude" className="block text-sm font-medium mb-1 text-gray-800">
-                  Longitude
-                </label>
-                <input
-                  id="longitude"
-                  name="longitude"
-                  type="text"
-                  value={formData.longitude}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-                  placeholder="e.g., 54.3667"
-                />
-                {errors.longitude && <p className="mt-1 text-sm text-red-600">{errors.longitude}</p>}
-              </div>
+            <div className="text-center mt-4">
+              <Link href="/" className="text-red-600 hover:text-red-700 text-sm underline">
+                Back to Home
+              </Link>
             </div>
-          </div>
-          
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-800">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-          </div>
-          
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-800">
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-              placeholder="+9715********"
-            />
-            {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-          </div>
-          
-          <div>
-            <label htmlFor="licenseNumber" className="block text-sm font-medium mb-1 text-gray-800">
-              License Number
-            </label>
-            <input
-              id="licenseNumber"
-              name="licenseNumber"
-              type="text"
-              value={formData.licenseNumber}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-            />
-            {errors.licenseNumber && <p className="mt-1 text-sm text-red-600">{errors.licenseNumber}</p>}
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1 text-gray-800">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-            />
-            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-          </div>
-          
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1 text-gray-800">
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-md text-gray-800"
-            />
-            {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
-          </div>
-          
-          <div>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-[#e56f6f] hover:bg-[#d05a5a] text-white py-3 px-6 rounded-full transition-colors duration-300 font-medium"
-            >
-              {isSubmitting ? 'Registering...' : 'Register Clinic'}
-            </button>
-          </div>
-          
-          <div className="text-center mt-4">
-            <Link href="/" className="text-[#e56f6f] hover:text-[#d05a5a] text-sm underline">
-              Back to Home
-            </Link>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

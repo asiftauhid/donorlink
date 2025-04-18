@@ -56,43 +56,43 @@ export default function DonorDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white">
       {/* Top Navigation */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">DonorLink</h1>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1 text-[#e56f6f]">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="font-medium">{donorData.points} points</span>
-            </div>
-            <span className="text-gray-800">{donorData.name}</span>
-            <Link 
-              href="/"
-              className="text-[#e56f6f] hover:text-[#d05a5a] text-sm font-medium"
-            >
-              Sign Out
-            </Link>
-          </div>
+      <nav className="px-6 py-4 flex items-center justify-between bg-white shadow">
+        <div className="flex items-center">
+          <div className="text-red-600 font-bold text-2xl">DonorLink</div>
         </div>
-      </header>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 text-red-600">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="font-medium">{donorData.points} points</span>
+          </div>
+          <span className="text-gray-800">{donorData.name}</span>
+          <Link 
+            href="/"
+            className="text-red-600 hover:text-red-700 text-sm font-medium"
+          >
+            Sign Out
+          </Link>
+        </div>
+      </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Left Sidebar */}
           <div className="col-span-1">
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-3xl shadow-md overflow-hidden">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0 h-12 w-12 rounded-full bg-[#e56f6f] flex items-center justify-center text-white font-bold text-xl">
+                  <div className="flex-shrink-0 h-12 w-12 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-xl">
                     {donorData.name.charAt(0)}
                   </div>
                   <div>
                     <h2 className="text-lg font-medium text-gray-800">{donorData.name}</h2>
-                    <p className="text-[#e56f6f] font-medium">
+                    <p className="text-red-600 font-medium">
                       Blood Type: {donorData.bloodType}
                     </p>
                   </div>
@@ -131,7 +131,7 @@ export default function DonorDashboardPage() {
                 
                 <div>
                   <button 
-                    className="w-full bg-[#e56f6f] hover:bg-[#d05a5a] text-white py-2 px-4 rounded-md shadow-sm"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-full shadow-md transition-colors duration-300"
                   >
                     Edit Profile
                   </button>
@@ -142,7 +142,7 @@ export default function DonorDashboardPage() {
           
           {/* Main Content Area */}
           <div className="col-span-1 md:col-span-3">
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-white rounded-3xl shadow-md">
               {/* Tabs */}
               <div className="border-b border-gray-200">
                 <nav className="flex -mb-px">
@@ -150,7 +150,7 @@ export default function DonorDashboardPage() {
                     onClick={() => setActiveTab('requests')}
                     className={`py-4 px-6 font-medium text-sm ${
                       activeTab === 'requests'
-                        ? 'border-b-2 border-[#e56f6f] text-[#e56f6f]'
+                        ? 'border-b-2 border-red-600 text-red-600'
                         : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
@@ -160,7 +160,7 @@ export default function DonorDashboardPage() {
                     onClick={() => setActiveTab('history')}
                     className={`py-4 px-6 font-medium text-sm ${
                       activeTab === 'history'
-                        ? 'border-b-2 border-[#e56f6f] text-[#e56f6f]'
+                        ? 'border-b-2 border-red-600 text-red-600'
                         : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
@@ -170,7 +170,7 @@ export default function DonorDashboardPage() {
                     onClick={() => setActiveTab('rewards')}
                     className={`py-4 px-6 font-medium text-sm ${
                       activeTab === 'rewards'
-                        ? 'border-b-2 border-[#e56f6f] text-[#e56f6f]'
+                        ? 'border-b-2 border-red-600 text-red-600'
                         : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
@@ -228,7 +228,7 @@ export default function DonorDashboardPage() {
                               >
                                 {request.urgency}
                               </span>
-                              <button className="bg-[#e56f6f] hover:bg-[#d05a5a] text-white py-1.5 px-4 rounded-md text-sm">
+                              <button className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-4 rounded-full text-sm shadow-sm transition-colors duration-300">
                                 Respond
                               </button>
                             </div>
@@ -292,8 +292,8 @@ export default function DonorDashboardPage() {
                                     {donation.status}
                                   </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-[#e56f6f]">
-                                  <button className="hover:text-[#d05a5a]">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                                  <button className="hover:text-red-700">
                                     Download
                                   </button>
                                 </td>
@@ -325,15 +325,15 @@ export default function DonorDashboardPage() {
                       </p>
                     </div>
                     
-                    <div className="bg-[#fdf4f2] rounded-lg p-4 mb-6">
+                    <div className="bg-red-50 rounded-lg p-4 mb-6">
                       <div className="flex items-center">
-                        <div className="h-12 w-12 rounded-full bg-[#e56f6f] text-white flex items-center justify-center mr-4">
+                        <div className="h-12 w-12 rounded-full bg-red-600 text-white flex items-center justify-center mr-4">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">You have <span className="text-[#e56f6f] font-bold">{donorData.points} points</span></p>
+                          <p className="font-medium text-gray-800">You have <span className="text-red-600 font-bold">{donorData.points} points</span></p>
                           <p className="text-sm text-gray-600">Next donation: +100 points</p>
                         </div>
                       </div>
@@ -348,14 +348,14 @@ export default function DonorDashboardPage() {
                             <h5 className="font-medium text-gray-800">$10 Gift Card</h5>
                             <p className="text-sm text-gray-500 mt-1">Redeem for a $10 gift card at participating stores</p>
                           </div>
-                          <div className="bg-[#e56f6f] text-white px-3 py-1 rounded-full text-sm">
+                          <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm">
                             200 points
                           </div>
                         </div>
                         <button 
-                          className={`mt-4 w-full py-2 rounded-md text-sm ${
+                          className={`mt-4 w-full py-2 rounded-full text-sm ${
                             donorData.points >= 200
-                              ? 'bg-[#e56f6f] hover:bg-[#d05a5a] text-white'
+                              ? 'bg-red-600 hover:bg-red-700 text-white'
                               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           }`}
                           disabled={donorData.points < 200}
@@ -370,12 +370,12 @@ export default function DonorDashboardPage() {
                             <h5 className="font-medium text-gray-800">Movie Ticket</h5>
                             <p className="text-sm text-gray-500 mt-1">Free movie ticket at partnered cinemas</p>
                           </div>
-                          <div className="bg-[#e56f6f] text-white px-3 py-1 rounded-full text-sm">
+                          <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm">
                             300 points
                           </div>
                         </div>
                         <button 
-                          className="mt-4 w-full py-2 rounded-md text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
+                          className="mt-4 w-full py-2 rounded-full text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
                           disabled
                         >
                           Not enough points
