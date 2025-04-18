@@ -110,7 +110,7 @@ export default function RequestDetailsPage() {
     );
   };
 
-  // Handle sending requests to selected donors
+ /*  // Handle sending requests to selected donors
   const handleSendRequests = async () => {
     const selectedDonors = nearbyDonors.filter(donor => donor.selected);
     
@@ -160,6 +160,76 @@ export default function RequestDetailsPage() {
       setIsSending(false);
     }
   };
+ */
+
+  const handleSendRequests = async () => {
+    const selectedDonors = nearbyDonors.filter(donor => donor.selected);
+    
+    if (selectedDonors.length === 0) {
+      setError('Please select at least one donor to send the request');
+      return;
+    }
+  
+    try {
+      setIsSending(true);
+      setError(null);
+  
+      const subject = `Urgent Blood Request for ${bloodRequest?.bloodType}`;
+      const message = `
+  Dear donor,
+  
+  ${user?.name} urgently needs ${bloodRequest?.quantity} unit(s) of ${bloodRequest?.bloodType} blood.
+  
+  Urgency Level: ${bloodRequest?.urgency}
+  
+  Please select your avaiablity through the portal and visit the ${user?.name} donation center to donate.
+
+  Thank you for helping save lives!
+  
+  Happy donating!
+
+  Best,
+  DonorLink Team
+  `;
+  
+      const response = await fetch('/api/sendNotification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          donorIds: selectedDonors.map(donor => donor.id),
+          subject,
+          message,
+          clinicId: user?.id,
+          bloodRequestId: id,
+        }),
+      });
+  
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to send requests');
+      }
+  
+      setSuccessMessage(`Blood donation requests sent successfully to ${selectedDonors.length} donor(s)`);
+      
+      // Reset selections
+      setNearbyDonors(prevDonors =>
+        prevDonors.map(donor => ({ ...donor, selected: false }))
+      );
+  
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+  
+    } catch (err) {
+      console.error('Error sending requests:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred while sending requests');
+    } finally {
+      setIsSending(false);
+    }
+  };
+  
 
   // Get number of selected donors
   const selectedDonorsCount = nearbyDonors.filter(donor => donor.selected).length;

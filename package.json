@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "dev": "next dev",
+  "build": "next build",
+  "start": "next start"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
