@@ -3,3 +3,5 @@ jsonwebtoken
 jose
 next-auth
 jest
+nodemailer
+--save-dev @types/nodemailer
