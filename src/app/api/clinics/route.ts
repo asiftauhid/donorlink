@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
 import dbConnect from '@/lib/mongodb';
 import Clinic from '@/lib/mongodb/models/clinic.model';
 
@@ -75,11 +74,11 @@ export async function POST(request: Request) {
       }
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Registration error:', error);
     
     // Handle duplicate key errors
-    if (error.code === 11000) {
+    if (error instanceof Error && 'code' in error && error.code === 11000) {
       return NextResponse.json(
         { error: 'A clinic with this email or license number already exists' },
         { status: 409 }

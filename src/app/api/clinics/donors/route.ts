@@ -53,10 +53,12 @@ interface PopulatedNotification {
   createdAt: Date;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(
+  request: Request
+) {
   try {
     // Get the authenticated user
-    const user = await getAuthenticatedUser(req);
+    const user = await getAuthenticatedUser(request as NextRequest);
     
     // Check if the user is authenticated and is a clinic
     if (!user || user.userType !== 'clinic') {

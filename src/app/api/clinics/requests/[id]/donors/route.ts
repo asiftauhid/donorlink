@@ -50,17 +50,17 @@ const BLOOD_COMPATIBILITY: Record<string, string[]> = {
 };
 
 export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     // Access the ID from context.params
     // const requestId = context.params.id;
-    const { id: requestId } = await context.params;
+    const { id: requestId } = params;
     console.log("Received ID:", requestId);
     
     // Get the authenticated user
-    const user = await getAuthenticatedUser(req);
+    const user = await getAuthenticatedUser(request as NextRequest);
     
     // Check if the user is authenticated and is a clinic
     if (!user || user.userType !== 'clinic') {
@@ -133,7 +133,8 @@ export async function GET(
     const clinicLatitude = clinic.location.coordinates[1];
     
     // Parse the max distance from query params (default to 20km)
-    const searchParams = req.nextUrl.searchParams;
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
     const maxDistance = parseInt(searchParams.get('maxDistance') || '20');
     
     // Get compatible blood types for the requested type
@@ -207,7 +208,7 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error finding nearby donors:', error);
-    console.error('Request ID:', context.params.id);
+    console.error('Request ID:', params.id);
     
     return NextResponse.json(
       { message: 'Failed to find nearby donors: ' + (error instanceof Error ? error.message : 'Unknown error') },

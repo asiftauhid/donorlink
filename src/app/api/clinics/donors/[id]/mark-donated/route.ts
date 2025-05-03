@@ -30,15 +30,15 @@ async function getAuthenticatedUser(req: NextRequest) {
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     await dbConnect();
 
     // Get authenticated user
-    const user = await getAuthenticatedUser(req);
+    const user = await getAuthenticatedUser(request as NextRequest);
     if (!user || user.userType !== 'clinic') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -46,7 +46,7 @@ export async function PATCH(
       );
     }
 
-    const { id } = await context.params;
+    const { id } = params;
 
     // Find the notification and update its status
     const notification = await Notification.findById(id);
