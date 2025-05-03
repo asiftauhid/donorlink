@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
-async function getAuthenticatedUser(req: NextRequest) {
+async function getAuthenticatedUser(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const tokenCookie = cookieStore.get('donorlink_token');
