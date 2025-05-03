@@ -49,14 +49,12 @@ const BLOOD_COMPATIBILITY: Record<string, string[]> = {
   'O-': ['O-'], // Universal donor
 };
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request) {
   try {
-    // Access the ID from context.params
-    // const requestId = context.params.id;
-    const { id: requestId } = params;
+    // Extract the id from the URL
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const requestId = pathParts[pathParts.length - 2]; // [id] is the second last part
     console.log("Received ID:", requestId);
     
     // Get the authenticated user
@@ -133,7 +131,6 @@ export async function GET(
     const clinicLatitude = clinic.location.coordinates[1];
     
     // Parse the max distance from query params (default to 20km)
-    const url = new URL(request.url);
     const searchParams = url.searchParams;
     const maxDistance = parseInt(searchParams.get('maxDistance') || '20');
     
@@ -208,7 +205,8 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error finding nearby donors:', error);
-    console.error('Request ID:', params.id);
+    // No params.id anymore, so just log the URL
+    console.error('Request URL:', request.url);
     
     return NextResponse.json(
       { message: 'Failed to find nearby donors: ' + (error instanceof Error ? error.message : 'Unknown error') },
