@@ -96,4 +96,9 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function PATCH(request: Request) {
+  // Use the same logic as POST
+  return POST(request);
 } 
