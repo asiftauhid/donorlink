@@ -30,12 +30,14 @@ async function getAuthenticatedUser(request: NextRequest) {
   }
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request) {
   try {
     await dbConnect();
+
+    // Extract the id from the URL
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const id = pathParts[pathParts.length - 2]; // [id] is the second last part
 
     // Get authenticated user
     const user = await getAuthenticatedUser(request as NextRequest);
@@ -45,8 +47,6 @@ export async function POST(
         { status: 401 }
       );
     }
-
-    const { id } = params;
 
     // Find the notification and update its status
     const notification = await Notification.findById(id);
