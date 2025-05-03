@@ -1,59 +1,189 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface BloodRequest {
+  id: string;
+  clinic: string;
+  bloodType: string;
+  urgency: 'High' | 'Medium' | 'Low';
+  location: string;
+  date: string;
+  distance: string;
+  notificationId: string;
+  isInterested?: boolean;
+}
+
+interface DonationHistory {
+  id: string;
+  date: string;
+  clinic: string;
+  bloodType: string;
+  status: string;
+}
+
+interface DonorData {
+  name: string;
+  bloodType: string;
+  lastDonation: string | null;
+  totalDonations: number;
+  eligibleToDonateSince: string;
+  points: number;
+}
 
 export default function DonorDashboardPage() {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('requests');
+  const [requests, setRequests] = useState<BloodRequest[]>([]);
+  const [donationHistory, setDonationHistory] = useState<DonationHistory[]>([]);
+  const [donorData, setDonorData] = useState<DonorData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showThankYou, setShowThankYou] = useState<string | null>(null);
 
-  // Mock data for active blood requests
-  const requests = [
-    { 
-      id: 1, 
-      clinic: 'Clinic A', 
-      bloodType: 'A+', 
-      urgency: 'High', 
-      location: 'Zone 5', 
-      date: '2025-04-15',
-      distance: '1.2 km'
-    },
-    { 
-      id: 2, 
-      clinic: 'Medical Center B', 
-      bloodType: 'O-', 
-      urgency: 'Medium', 
-      location: 'Zone 3', 
-      date: '2025-04-17',
-      distance: '3.5 km'
-    },
-    { 
-      id: 3, 
-      clinic: 'Hospital C', 
-      bloodType: 'B+', 
-      urgency: 'Low', 
-      location: 'Zone 8', 
-      date: '2025-04-20',
-      distance: '5.8 km'
-    },
-  ];
+  useEffect(() => {
+    // Redirect if not logged in
+    if (!user) {
+      router.push('/login');
+      return;
+    }
 
-  // Mock data for donation history
-  const donationHistory = [
-    { id: 1, date: '2024-12-10', clinic: 'Clinic A', bloodType: 'A+', status: 'Completed' },
-    { id: 2, date: '2024-08-05', clinic: 'Hospital C', bloodType: 'A+', status: 'Completed' },
-  ];
+    // Fetch dashboard data
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await fetch('/api/donors/dashboard', {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+        
+        const data = await response.json();
+        console.log('Dashboard API Response:', data); // Debug log
+        console.log('Donor Data:', data.donorData); // Debug log
+        setDonorData(data.donorData);
+        setRequests(data.requests);
+        setDonationHistory(data.donationHistory);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Mock donor data
-  const donorData = {
-    name: 'John Doe',
-    bloodType: 'A+',
-    lastDonation: '2024-12-10',
-    totalDonations: 2,
-    eligibleToDonateSince: '2025-03-10',
-    points: 250,
+    fetchDashboardData();
+  }, [user, router]);
+
+  const handleSignOut = async () => {
+    await logout();
+    router.push('/');
   };
+
+  const handleExpressInterest = async (notificationId: string) => {
+    try {
+      const response = await fetch('/api/donors/express-interest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to express interest');
+      }
+
+      // Update the request's interested status
+      setRequests(prevRequests => 
+        prevRequests.map(request => 
+          request.notificationId === notificationId 
+            ? { ...request, isInterested: true }
+            : request
+        )
+      );
+
+      setShowThankYou(notificationId);
+      setTimeout(() => {
+        setShowThankYou(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Error expressing interest:', err);
+      setError(err instanceof Error ? err.message : 'Failed to express interest');
+    }
+  };
+
+  const handleWithdrawInterest = async (notificationId: string) => {
+    try {
+      const response = await fetch('/api/donors/express-interest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationId, withdraw: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to withdraw interest');
+      }
+
+      // Update the request's interested status
+      setRequests(prevRequests => 
+        prevRequests.map(request => 
+          request.notificationId === notificationId 
+            ? { ...request, isInterested: false }
+            : request
+        )
+      );
+    } catch (err) {
+      console.error('Error withdrawing interest:', err);
+      setError(err instanceof Error ? err.message : 'Failed to withdraw interest');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <svg className="animate-spin h-8 w-8 mx-auto text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="mt-2 text-gray-500">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white p-8">
+        <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-md p-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
+            {error}
+          </div>
+          <button
+            onClick={() => router.push('/login')}
+            className="text-red-600 hover:text-red-700 font-medium"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!donorData) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-white">
@@ -70,17 +200,35 @@ export default function DonorDashboardPage() {
             <span className="font-medium">{donorData.points} points</span>
           </div>
           <span className="text-gray-800">{donorData.name}</span>
-          <Link 
-            href="/"
+          <button 
+            onClick={handleSignOut}
             className="text-red-600 hover:text-red-700 text-sm font-medium"
           >
             Sign Out
-          </Link>
+          </button>
         </div>
       </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {showThankYou && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-center justify-between">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Thanks for your interest. We'll contact you shortly!!</span>
+            </div>
+            <button 
+              onClick={() => setShowThankYou(null)}
+              className="text-green-700 hover:text-green-800"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Left Sidebar */}
           <div className="col-span-1">
@@ -104,7 +252,7 @@ export default function DonorDashboardPage() {
                   <div className="space-y-3 text-gray-800">
                     <div className="flex justify-between">
                       <span>Last Donation</span>
-                      <span>{donorData.lastDonation}</span>
+                      <span>{donorData.lastDonation ? new Date(donorData.lastDonation).toLocaleDateString() : 'Never'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Total Donations</span>
@@ -112,19 +260,28 @@ export default function DonorDashboardPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Eligible Since</span>
-                      <span>{donorData.eligibleToDonateSince}</span>
+                      <span>{new Date(donorData.eligibleToDonateSince).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
                 
                 <div>
                   <h3 className="text-sm uppercase font-medium text-gray-500 mb-2">Donation Status</h3>
-                  <div className="bg-green-100 text-green-800 p-3 rounded-md">
+                  <div className={`p-3 rounded-md ${
+                    new Date(donorData.eligibleToDonateSince) <= new Date()
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
                     <div className="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span>You are eligible to donate</span>
+                      <span>
+                        {new Date(donorData.eligibleToDonateSince) <= new Date()
+                          ? 'You are eligible to donate'
+                          : `You will be eligible to donate on ${new Date(donorData.eligibleToDonateSince).toLocaleDateString()}`
+                        }
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -190,7 +347,7 @@ export default function DonorDashboardPage() {
                           className="border border-gray-300 rounded-md text-sm text-gray-700 px-3 py-1.5"
                         >
                           <option value="all">All Blood Types</option>
-                          <option value="compatible">Compatible with A+</option>
+                          <option value="compatible">Compatible with {donorData.bloodType}</option>
                         </select>
                         <button 
                           className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-3 rounded-md text-sm"
@@ -211,7 +368,7 @@ export default function DonorDashboardPage() {
                               <div>
                                 <h4 className="text-base font-medium text-gray-800">{request.clinic}</h4>
                                 <p className="text-sm text-gray-500">
-                                  {request.location} • {request.distance} • Required by: {request.date}
+                                  {request.location} • {request.distance} km • Required by: {new Date(request.date).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
@@ -228,9 +385,22 @@ export default function DonorDashboardPage() {
                               >
                                 {request.urgency}
                               </span>
-                              <button className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-4 rounded-full text-sm shadow-sm transition-colors duration-300">
-                                Respond
-                              </button>
+                              {request.isInterested ? (
+                                <button 
+                                  className="bg-gray-600 hover:bg-gray-700 text-white py-1.5 px-4 rounded-full text-sm shadow-sm transition-colors duration-300"
+                                  onClick={() => handleWithdrawInterest(request.notificationId)}
+                                >
+                                  Not Interested Anymore
+                                </button>
+                              ) : (
+                                <button 
+                                  className="bg-red-600 hover:bg-red-900 text-white py-1.5 px-4 rounded-full text-sm shadow-sm transition-colors duration-300"
+                                  disabled={new Date(donorData.eligibleToDonateSince) > new Date()}
+                                  onClick={() => handleExpressInterest(request.notificationId)}
+                                >
+                                  Interested
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -279,7 +449,7 @@ export default function DonorDashboardPage() {
                             {donationHistory.map((donation) => (
                               <tr key={donation.id}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                  {donation.date}
+                                  {new Date(donation.date).toLocaleDateString()}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                                   {donation.clinic}
@@ -361,24 +531,6 @@ export default function DonorDashboardPage() {
                           disabled={donorData.points < 200}
                         >
                           {donorData.points >= 200 ? 'Redeem' : 'Not enough points'}
-                        </button>
-                      </div>
-                      
-                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h5 className="font-medium text-gray-800">Movie Ticket</h5>
-                            <p className="text-sm text-gray-500 mt-1">Free movie ticket at partnered cinemas</p>
-                          </div>
-                          <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm">
-                            300 points
-                          </div>
-                        </div>
-                        <button 
-                          className="mt-4 w-full py-2 rounded-full text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
-                          disabled
-                        >
-                          Not enough points
                         </button>
                       </div>
                     </div>

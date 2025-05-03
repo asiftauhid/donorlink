@@ -6,7 +6,7 @@ export interface INotification extends Document {
   donorId: mongoose.Types.ObjectId;
   clinicId: mongoose.Types.ObjectId;
   bloodRequestId?: mongoose.Types.ObjectId;
-  status: 'pending' | 'sent' | 'failed';
+  status: 'pending' | 'sent' | 'failed' | 'interested' | 'donated';
   email: string;
   subject: string;
   message: string;
@@ -21,14 +21,17 @@ const NotificationSchema = new Schema<INotification>(
     email: { type: String, required: true },
     subject: { type: String, required: true },
     message: { type: String, required: true },
-    status: { type: String, enum: ['pending', 'sent', 'failed'], default: 'pending' },
+    status: { type: String, enum: ['pending', 'sent', 'failed', 'interested', 'donated'], default: 'pending' },
     sentAt: { type: Date },
   },
   { timestamps: true }
 );
 
-const Notification =
-  mongoose.models.Notification as mongoose.Model<INotification> ||
-  mongoose.model<INotification>('Notification', NotificationSchema);
+// Delete the model if it exists to force recompilation
+if (mongoose.models.Notification) {
+  delete mongoose.models.Notification;
+}
+
+const Notification = mongoose.model<INotification>('Notification', NotificationSchema);
 
 export default Notification;
