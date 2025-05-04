@@ -1,7 +1,12 @@
-// src/contexts/AuthContext.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { useRouter } from 'next/navigation';
 
 type User = {
@@ -14,7 +19,11 @@ type User = {
 type AuthContextType = {
   user: User;
   loading: boolean;
-  login: (email: string, password: string, userType: 'donor' | 'clinic') => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    userType: 'donor' | 'clinic'
+  ) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -32,73 +41,79 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Function to check user auth status with the server
   const checkAuthStatus = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/auth/status', { 
+      const response = await fetch('/api/auth/status', {
         method: 'GET',
-        credentials: 'include', // Important to include cookies
+        credentials: 'include',
       });
-      
+
+      console.log('[AUTH] status response', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('[AUTH] logged in user:', data.user);
         setUser(data.user);
-        // Also update localStorage for consistency
         localStorage.setItem('donorlink_user', JSON.stringify(data.user));
-      } else {
-        // Clear any stored user data if server says we're not authenticated
+      } else if (response.status === 401) {
+        console.warn('[AUTH] Not authenticated.');
         setUser(null);
         localStorage.removeItem('donorlink_user');
+      } else {
+        fallbackToLocal();
       }
     } catch (error) {
-      console.error('Auth status check error:', error);
-      // If we can't reach the server, fall back to localStorage
-      const storedUser = localStorage.getItem('donorlink_user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (error) {
-          localStorage.removeItem('donorlink_user');
-        }
-      }
+      console.error('[AUTH] Network error or server issue:', error);
+      fallbackToLocal();
     } finally {
       setLoading(false);
     }
   };
 
+  const fallbackToLocal = () => {
+    const storedUser = localStorage.getItem('donorlink_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('donorlink_user');
+      }
+    }
+  };
+
   useEffect(() => {
-    // Check auth status when component mounts
     checkAuthStatus();
   }, []);
 
-  const login = async (email: string, password: string, userType: 'donor' | 'clinic') => {
+  const login = async (
+    email: string,
+    password: string,
+    userType: 'donor' | 'clinic'
+  ) => {
     setLoading(true);
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, userType }),
-        credentials: 'include', // Important to include cookies
+        credentials: 'include',
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Login failed');
       }
-      
+
       setUser(data.user);
       localStorage.setItem('donorlink_user', JSON.stringify(data.user));
-      
-      // Redirect based on user type
+
       if (userType === 'clinic') {
         router.push('/dashboard/clinic');
       } else {
         router.push('/dashboard/donor');
       }
-      
     } catch (error) {
       throw error;
     } finally {
@@ -111,13 +126,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include', // Important to include cookies
+        credentials: 'include',
       });
-      
+
       setUser(null);
       localStorage.removeItem('donorlink_user');
       router.push('/');
-      
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -127,7 +141,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
+      {!loading ? (
+        children
+      ) : (
+        <div className="flex items-center justify-center min-h-screen text-gray-600 text-lg">
+          Loading DonorLink...
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };
