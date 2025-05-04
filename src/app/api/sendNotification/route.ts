@@ -1,4 +1,5 @@
 // app/api/sendNotification/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import Notification from '@/lib/mongodb/models/notification.model';
@@ -16,6 +17,16 @@ export async function POST(req: NextRequest) {
     const donors = await Donor.find({ _id: { $in: donorIds } });
 
     for (const donor of donors) {
+      const notificationData = {
+        donorId: donor._id,
+        clinicId,
+        bloodRequestId,
+        email: donor.email,
+        subject,
+        message,
+        sentAt: new Date(),
+      };
+
       try {
         await transporter.sendMail({
           from: `"DonorLink UAE" <${process.env.GMAIL_USER}>`,
@@ -24,27 +35,11 @@ export async function POST(req: NextRequest) {
           text: message,
         });
 
-        await Notification.create({
-          donorId: donor._id,
-          clinicId,
-          bloodRequestId,
-          email: donor.email,
-          subject,
-          message,
-          status: 'sent',
-          sentAt: new Date(),
-        });
+        await Notification.create({ ...notificationData, status: 'sent'});
+
       } catch (error) {
         console.error('Failed to send to', donor.email, error);
-        await Notification.create({
-          donorId: donor._id,
-          clinicId,
-          bloodRequestId,
-          email: donor.email,
-          subject,
-          message,
-          status: 'failed',
-        });
+        await Notification.create({ ...notificationData, status: 'failed'});
       }
     }
 

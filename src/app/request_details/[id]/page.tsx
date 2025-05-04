@@ -1,4 +1,4 @@
-// src/app/request_details/[id]/page.tsx
+// app/request_details/[id]/page.tsx
 
 'use client';
 
@@ -15,7 +15,8 @@ interface NearbyDonor {
   email: string;
   phoneNumber: string;
   lastDonation?: string;
-  selected?: boolean; // Added selected property
+  selected?: boolean;
+  notifyStatus?: 'Sent' | 'Not Sent';
 }
 
 interface BloodRequestDetails {
@@ -68,12 +69,27 @@ export default function RequestDetailsPage() {
         
         const data = await response.json();
         setBloodRequest(data.bloodRequest);
-        
-        // Initialize donors with selected property set to false
-        const donorsWithSelection = (data.nearbyDonors || []).map((donor: NearbyDonor) => ({
-          ...donor,
-          selected: false
-        }));
+
+      // Fetch ALL notification history (not scoped to requestId)
+      const historyRes = await fetch('/api/notificationHistory');
+      const historyData = historyRes.ok ? await historyRes.json() : [];
+
+      // Filter to only notifications related to this blood request
+      const requestHistory = historyData.filter(
+        (entry: { bloodRequestId: string }) => entry.bloodRequestId === id
+      );
+
+      // Create set of donorIds that have been notified for this request
+      const notifiedDonorIds = new Set(
+        requestHistory.map((entry: { donorId: string }) => entry.donorId)
+      );
+
+      // Set notifyStatus for each donor
+      const donorsWithSelection = (data.nearbyDonors || []).map((donor: NearbyDonor) => ({
+        ...donor,
+        selected: false,
+        notifyStatus: notifiedDonorIds.has(donor.id) ? 'Sent' : 'Not Sent',
+      }));
         
         setNearbyDonors(donorsWithSelection);
       } catch (err) {
@@ -111,58 +127,6 @@ export default function RequestDetailsPage() {
       prevDonors.map(donor => ({ ...donor, selected: !areAllSelected }))
     );
   };
-
- /*  // Handle sending requests to selected donors
-  const handleSendRequests = async () => {
-    const selectedDonors = nearbyDonors.filter(donor => donor.selected);
-    
-    if (selectedDonors.length === 0) {
-      setError('Please select at least one donor to send the request');
-      return;
-    }
-    
-    try {
-      setIsSending(true);
-      setError(null);
-      
-      // Example API call - replace with your actual endpoint
-      const response = await fetch(`/api/clinics/requests/${id}/notify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          donorIds: selectedDonors.map(donor => donor.id)
-        }),
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to send requests');
-      }
-      
-      // Success message
-      setSuccessMessage(`Blood donation requests sent successfully to ${selectedDonors.length} donor(s)`);
-      
-      // Reset selections
-      setNearbyDonors(prevDonors => 
-        prevDonors.map(donor => ({ ...donor, selected: false }))
-      );
-      
-      // Clear success message after a few seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 5000);
-      
-    } catch (err) {
-      console.error('Error sending requests:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred while sending requests');
-    } finally {
-      setIsSending(false);
-    }
-  };
- */
 
   const handleSendRequests = async () => {
     const selectedDonors = nearbyDonors.filter(donor => donor.selected);
@@ -214,11 +178,15 @@ export default function RequestDetailsPage() {
       }
   
       setSuccessMessage(`Blood donation requests sent successfully to ${selectedDonors.length} donor(s)`);
-      
-      // Reset selections
-      setNearbyDonors(prevDonors =>
-        prevDonors.map(donor => ({ ...donor, selected: false }))
-      );
+
+      setNearbyDonors(prevDonors => {
+        const updatedDonorIds = new Set(selectedDonors.map(d => d.id));
+        return prevDonors.map(donor =>
+          updatedDonorIds.has(donor.id)
+            ? { ...donor, selected: false, notifyStatus: 'Sent' }
+            : donor
+        );
+      });
   
       setTimeout(() => {
         setSuccessMessage(null);
@@ -414,6 +382,9 @@ export default function RequestDetailsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Last Donation
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Notify Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -452,6 +423,13 @@ export default function RequestDetailsPage() {
                           {donor.lastDonation 
                             ? new Date(donor.lastDonation).toLocaleDateString() 
                             : 'Never'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            donor.notifyStatus === 'Sent' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {donor.notifyStatus || 'Not Sent'}
+                          </span>
                         </td>
                       </tr>
                     ))}
