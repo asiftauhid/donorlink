@@ -47,28 +47,32 @@ export default function DonorDashboardPage() {
 
   useEffect(() => {
     // Redirect if not logged in
-    if (!user) {
-      router.push('/login');
+    if (!user && !isLoading) {
+      setError('Session invalid or expired. Please log in again.');
       return;
     }
+    
 
     // Fetch dashboard data
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+    
         const response = await fetch('/api/donors/dashboard', {
           credentials: 'include',
         });
+    
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Your session has expired or is invalid. Please log in again.');
+        }
         
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch dashboard data');
-        // }
-        
+    
+        if (!response.ok) {
+          throw new Error('Something went wrong while loading your dashboard.');
+        }
+    
         const data = await response.json();
-        console.log('Dashboard API Response:', data); // Debug log
-        console.log('Donor Data:', data.donorData); // Debug log
         setDonorData(data.donorData);
         setRequests(data.requests);
         setDonationHistory(data.donationHistory);
@@ -79,6 +83,7 @@ export default function DonorDashboardPage() {
         setIsLoading(false);
       }
     };
+    
 
     fetchDashboardData();
   }, [user, router]);
