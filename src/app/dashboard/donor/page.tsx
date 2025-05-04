@@ -62,9 +62,9 @@ export default function DonorDashboardPage() {
           credentials: 'include',
         });
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
+        // if (!response.ok) {
+        //   throw new Error('Failed to fetch dashboard data');
+        // }
         
         const data = await response.json();
         console.log('Dashboard API Response:', data); // Debug log
@@ -157,7 +157,7 @@ export default function DonorDashboardPage() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p className="mt-2 text-gray-500">Loading dashboard data...</p>
+          <p className="mt-2 text-gray-500">Loading ...</p>
         </div>
       </div>
     );
@@ -165,17 +165,21 @@ export default function DonorDashboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white p-8">
-        <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-md p-6">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-            {error}
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center px-4">
+        <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md text-center">
+          <div className="mx-auto w-16 h-16 flex items-center justify-center bg-red-100 text-red-600 rounded-full">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728" />
+            </svg>
           </div>
+          <h2 className="text-xl font-semibold text-gray-800 mt-4">Oops! Something went wrong</h2>
           <button
             onClick={() => router.push('/login')}
-            className="text-red-600 hover:text-red-700 font-medium"
+            className="mt-6 inline-block bg-red-600 hover:bg-red-800 text-white text-sm px-6 py-2 rounded-full transition duration-200"
           >
             Return to Login
           </button>
+          <p className="mt-4 text-xs text-gray-400">Tip: Try logging in with one user per browser or use incognito.</p>
         </div>
       </div>
     );
