@@ -16,6 +16,8 @@ export interface IDonor extends Document {
   phoneNumber: string;
   lastDonation?: Date;
   points: number;
+  totalDonations: number;
+  eligibleToDonateSince?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -68,6 +70,13 @@ const DonorSchema = new Schema<IDonor>(
     points: {
       type: Number,
       default: 0,
+    },
+    totalDonations: {
+      type: Number,
+      default: 0,
+    },
+    eligibleToDonateSince: {
+      type: Date,
     },
   },
   {

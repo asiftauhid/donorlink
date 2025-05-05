@@ -142,21 +142,21 @@ export default function RequestDetailsPage() {
   
       const subject = `Urgent Blood Request for ${bloodRequest?.bloodType}`;
       const message = `
-  Dear donor,
-  
-  ${user?.name} urgently needs ${bloodRequest?.quantity} unit(s) of ${bloodRequest?.bloodType} blood.
-  
-  Urgency Level: ${bloodRequest?.urgency}
-  
-  Please select your avaiablity through the portal and visit the ${user?.name} donation center to donate.
+Dear ${selectedDonors[0].fullName},
 
-  Thank you for helping save lives!
-  
-  Happy donating!
+[[CLINIC_NAME]] urgently needs ${bloodRequest?.quantity} unit(s) of ${bloodRequest?.bloodType} blood.
 
-  Best,
-  DonorLink Team
-  `;
+Urgency Level: ${bloodRequest?.urgency}
+
+Please select your avaiablity through the portal and upon direct confirmation, visit their office to donate.
+
+Thank you for helping save lives!
+
+Happy donating!
+
+Best,
+DonorLink Team
+`;
   
       const response = await fetch('/api/sendNotification', {
         method: 'POST',

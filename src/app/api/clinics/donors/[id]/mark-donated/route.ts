@@ -4,6 +4,7 @@ import Notification from '@/lib/mongodb/models/notification.model';
 import Donor from '@/lib/mongodb/models/donor.model';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import mongoose from 'mongoose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
@@ -61,34 +62,62 @@ export async function POST(request: Request) {
     notification.status = 'donated';
     await notification.save();
 
-    // Update donor's points using findOneAndUpdate for atomic operation
-    const updatedDonor = await Donor.findOneAndUpdate(
-      { _id: notification.donorId },
-      [
-        {
-          $set: {
-            points: {
-              $add: [
-                { $ifNull: ["$points", 0] },
-                100
-              ]
-            }
-          }
-        }
-      ],
-      { new: true } // Return the updated document
+    // Calculate the date 4 months from now for eligibility
+    const now = new Date();
+    const fourMonthsFromNow = new Date(now);
+    fourMonthsFromNow.setMonth(fourMonthsFromNow.getMonth() + 4);
+
+    // Ensure donorId is an ObjectId
+    let donorObjectId = notification.donorId;
+    if (!(donorObjectId instanceof mongoose.Types.ObjectId)) {
+      donorObjectId = new mongoose.Types.ObjectId(donorObjectId);
+    }
+    console.log('Updating donor with _id:', donorObjectId);
+
+    // Ensure totalDonations field exists and is a number
+    await Donor.updateOne(
+      { _id: donorObjectId, $or: [ { totalDonations: { $exists: false } }, { totalDonations: { $type: 'null' } } ] },
+      { $set: { totalDonations: 0 } }
     );
+
+    // Update donor's information
+    const updatedDonor = await Donor.findOneAndUpdate(
+      { _id: donorObjectId },
+      {
+        $set: {
+          lastDonation: now,
+          eligibleToDonateSince: fourMonthsFromNow
+        },
+        $inc: {
+          points: 100,
+          totalDonations: 1
+        }
+      },
+      { new: true }
+    );
+
+    // Fetch donor again to verify
+    const verifiedDonor = await Donor.findById(donorObjectId);
+    console.log('Verified donor after donation:', verifiedDonor);
 
     if (!updatedDonor) {
-      console.error(`Donor not found for ID: ${notification.donorId}`);
-    } else {
-      console.log(`Updated points for donor ${updatedDonor._id}: ${updatedDonor.points}`);
+      console.error(`Donor not found for ID: ${donorObjectId}`);
+      return NextResponse.json(
+        { error: 'Donor not found' },
+        { status: 404 }
+      );
     }
+    console.log('Updated donor after donation:', updatedDonor);
 
-    return NextResponse.json(
-      { message: 'Successfully marked as donated and points awarded' },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      message: 'Successfully marked as donated!',
+      donor: {
+        points: updatedDonor.points,
+        lastDonation: updatedDonor.lastDonation,
+        eligibleToDonateSince: updatedDonor.eligibleToDonateSince,
+        totalDonations: updatedDonor.totalDonations
+      }
+    }, { status: 200 });
   } catch (error) {
     console.error('Error marking donation:', error);
     return NextResponse.json(

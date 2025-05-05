@@ -44,6 +44,8 @@ export default function DonorDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showThankYou, setShowThankYou] = useState<string | null>(null);
+  const [formattedEligibleDate, setFormattedEligibleDate] = useState('');
+  const [formattedLastDonation, setFormattedLastDonation] = useState('');
 
   useEffect(() => {
     // Redirect if not logged in
@@ -87,6 +89,15 @@ export default function DonorDashboardPage() {
 
     fetchDashboardData();
   }, [user, router]);
+
+  useEffect(() => {
+    if (donorData && donorData.eligibleToDonateSince) {
+      setFormattedEligibleDate(new Date(donorData.eligibleToDonateSince).toLocaleDateString());
+    }
+    if (donorData && donorData.lastDonation) {
+      setFormattedLastDonation(new Date(donorData.lastDonation).toLocaleDateString());
+    }
+  }, [donorData?.eligibleToDonateSince, donorData?.lastDonation]);
 
   const handleSignOut = async () => {
     await logout();
@@ -261,7 +272,7 @@ export default function DonorDashboardPage() {
                   <div className="space-y-3 text-gray-800">
                     <div className="flex justify-between">
                       <span>Last Donation</span>
-                      <span>{donorData.lastDonation ? new Date(donorData.lastDonation).toLocaleDateString() : 'Never'}</span>
+                      <span>{donorData ? (formattedLastDonation || 'Never') : ''}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Total Donations</span>
@@ -269,7 +280,7 @@ export default function DonorDashboardPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Eligible Since</span>
-                      <span>{new Date(donorData.eligibleToDonateSince).toLocaleDateString()}</span>
+                      <span>{donorData ? formattedEligibleDate : ''}</span>
                     </div>
                   </div>
                 </div>
@@ -286,9 +297,9 @@ export default function DonorDashboardPage() {
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       <span>
-                        {new Date(donorData.eligibleToDonateSince) <= new Date()
+                        {donorData && new Date(donorData.eligibleToDonateSince) <= new Date()
                           ? 'You are eligible to donate'
-                          : `You will be eligible to donate on ${new Date(donorData.eligibleToDonateSince).toLocaleDateString()}`
+                          : donorData ? `You will be eligible to donate on ${formattedEligibleDate}` : ''
                         }
                       </span>
                     </div>
@@ -377,7 +388,17 @@ export default function DonorDashboardPage() {
                               <div>
                                 <h4 className="text-base font-medium text-gray-800">{request.clinic}</h4>
                                 <p className="text-sm text-gray-500">
-                                  {request.location} • {request.distance} km • Required by: {new Date(request.date).toLocaleDateString()}
+                                  {(() => {
+                                    let requiredBy = new Date(request.date);
+                                    if (request.urgency === 'Low') {
+                                      requiredBy.setDate(requiredBy.getDate() + 7);
+                                    } else if (request.urgency === 'Medium') {
+                                      requiredBy.setDate(requiredBy.getDate() + 3);
+                                    } else if (request.urgency === 'High') {
+                                      requiredBy.setDate(requiredBy.getDate() + 1);
+                                    }
+                                    return `${request.location} • ${request.distance} km • Required by: ${requiredBy.toLocaleDateString()}`;
+                                  })()}
                                 </p>
                               </div>
                             </div>
@@ -524,11 +545,11 @@ export default function DonorDashboardPage() {
                       <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h5 className="font-medium text-gray-800">$10 Gift Card</h5>
-                            <p className="text-sm text-gray-500 mt-1">Redeem for a $10 gift card at participating stores</p>
+                            <h5 className="font-medium text-gray-800">$30 Gift Card</h5>
+                            <p className="text-sm text-gray-500 mt-1">Redeem for a $30 gift card at participating stores</p>
                           </div>
-                          <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm">
-                            200 points
+                          <div className="bg-red-600 text-white flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold min-w-[60px] min-h-[32px] text-center">
+                            200 Points
                           </div>
                         </div>
                         <button 

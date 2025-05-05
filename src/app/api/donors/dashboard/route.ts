@@ -111,6 +111,11 @@ export async function GET(req: NextRequest) {
       const bloodRequest = notification.bloodRequestId;
       const clinic = notification.clinicId;
 
+      // Skip cancelled requests
+      if (bloodRequest.status === 'Cancelled') {
+        return null;
+      }
+
       if (!clinic.location || !clinic.location.coordinates) {
         return null;
       }
@@ -154,9 +159,13 @@ export async function GET(req: NextRequest) {
 
     // Calculate eligibility
     const lastDonation = donorObj.lastDonation;
-    const eligibleToDonateSince = lastDonation 
-      ? new Date(lastDonation.getTime() + (56 * 24 * 60 * 60 * 1000)) // 56 days after last donation
-      : new Date(0);
+    let eligibleToDonateSince;
+    if (lastDonation) {
+      eligibleToDonateSince = new Date(lastDonation);
+      eligibleToDonateSince.setMonth(eligibleToDonateSince.getMonth() + 4);
+    } else {
+      eligibleToDonateSince = donorObj.createdAt ? new Date(donorObj.createdAt) : new Date(0);
+    }
 
     // Return the dashboard data
     const responseData = {
@@ -164,7 +173,8 @@ export async function GET(req: NextRequest) {
         name: donorObj.fullName,
         bloodType: donorObj.bloodType,
         lastDonation: lastDonation ? lastDonation.toISOString() : null,
-        totalDonations: 0, // TODO: Implement donation counting
+        // TODO: Hardcoded workaround: use points/100 for totalDonations until backend is fixed
+        totalDonations: donorObj.points ? Math.floor(donorObj.points / 100) : 0, // HARDCODED: replace with donorObj.totalDonations when fixed
         eligibleToDonateSince: eligibleToDonateSince.toISOString(),
         points: donorObj.points || 0,
       },

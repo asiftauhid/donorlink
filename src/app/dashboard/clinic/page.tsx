@@ -43,6 +43,7 @@ export default function ClinicDashboardPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [markedDonations, setMarkedDonations] = useState<Set<string>>(new Set());
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [donorStatusFilter, setDonorStatusFilter] = useState('all');
 
   useEffect(() => {
     // Redirect if not logged in
@@ -175,6 +176,11 @@ export default function ClinicDashboardPage() {
   const filteredRequests = statusFilter === 'all' 
     ? requests 
     : requests.filter(req => req.status.toLowerCase() === statusFilter);
+
+  // Filter donor requests based on status
+  const filteredDonorRequests = donorStatusFilter === 'all' 
+    ? donorRequests 
+    : donorRequests.filter(request => request.status === donorStatusFilter);
 
   if (isLoading) {
     return (
@@ -435,12 +441,14 @@ export default function ClinicDashboardPage() {
                               {new Date(request.createdAt).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                              <button 
-                                className="text-red-600 hover:text-red-700 mr-3"
-                                onClick={() => router.push(`/request_details/${request._id}`)}
-                              >
-                                View
-                              </button>
+                              {request.status !== 'Cancelled' && (
+                                <button 
+                                  className="text-red-600 hover:text-red-700 mr-3"
+                                  onClick={() => router.push(`/request_details/${request._id}`)}
+                                >
+                                  View
+                                </button>
+                              )}
                               {request.status === 'Active' && (
                                 <button 
                                   className="text-gray-600 hover:text-gray-900"
@@ -482,21 +490,19 @@ export default function ClinicDashboardPage() {
                   <div className="flex space-x-3">
                     <select 
                       className="border border-gray-300 rounded-md text-sm text-gray-700 px-3 py-1.5"
+                      value={donorStatusFilter}
+                      onChange={(e) => setDonorStatusFilter(e.target.value)}
                     >
                       <option value="all">All Status</option>
-                      <option value="pending">Pending</option>
                       <option value="sent">Sent</option>
+                      <option value="interested">Interested</option>
                       <option value="failed">Failed</option>
+                      <option value="donated">Donated</option>
                     </select>
-                    <button 
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-3 rounded-md text-sm"
-                    >
-                      Filter
-                    </button>
                   </div>
                 </div>
                 
-                {donorRequests.length > 0 ? (
+                {filteredDonorRequests.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -522,7 +528,7 @@ export default function ClinicDashboardPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {donorRequests.map((request) => (
+                        {filteredDonorRequests.map((request) => (
                           <tr key={request.id}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               #{request.bloodRequestId.substring(0, 6)}

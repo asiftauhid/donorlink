@@ -6,6 +6,7 @@ import Notification from '@/lib/mongodb/models/notification.model';
 import Donor from '@/lib/mongodb/models/donor.model';
 import dbConnect from '@/lib/mongodb';
 import { transporter } from '@/lib/utils/mailer';
+import Clinic from '@/lib/mongodb/models/clinic.model';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,16 +15,28 @@ export async function POST(req: NextRequest) {
 
     await dbConnect();
 
+    // Fetch clinic name
+    let clinicName = '';
+    if (clinicId) {
+      const clinic = await Clinic.findById(clinicId);
+      if (clinic) clinicName = clinic.name;
+    }
+
     const donors = await Donor.find({ _id: { $in: donorIds } });
 
     for (const donor of donors) {
+      // Inject clinic name into the message
+      let personalizedMessage = message.replace('Dear donor,', `Dear ${donor.fullName},`);
+      if (clinicName) {
+        personalizedMessage = personalizedMessage.replace('[[CLINIC_NAME]]', clinicName);
+      }
       const notificationData = {
         donorId: donor._id,
         clinicId,
         bloodRequestId,
         email: donor.email,
         subject,
-        message,
+        message: personalizedMessage,
         sentAt: new Date(),
       };
 
@@ -32,7 +45,7 @@ export async function POST(req: NextRequest) {
           from: `"DonorLink UAE" <${process.env.GMAIL_USER}>`,
           to: donor.email,
           subject,
-          text: message,
+          text: notificationData.message,
         });
 
         await Notification.create({ ...notificationData, status: 'sent'});
