@@ -204,7 +204,11 @@ export default function ClinicRegistrationPage() {
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form 
+            onSubmit={handleSubmit} 
+            className="space-y-6"
+            role="form"
+          >
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-1 text-gray-800">
                 Clinic Name

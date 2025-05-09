@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DonorLink
 
-## Getting Started
+DonorLink is a web application built with Next.js, TypeScript, and MongoDB that bridges the gap between donors and recipient clinics.
 
-First, run the development server:
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- Node.js (v18 or higher)
+- npm (comes with Node.js)
+- MongoDB (a MongoDB Atlas account)
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/asiftauhid/donorlink.git
+cd donorlink
+```
+
+2. Install dependencies:
+
+```bash
+npm install -r requirements
+```
+
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory with the following variables:
+
+```
+MONGODB_URI=mongodb_connection_string
+GMAIL_USER=email_address
+GMAIL_PASS=login_password
+
+```
+
+## Running the System locally
+
+To run the system in development mode:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Testing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Running Tests
 
-## Learn More
+1. To run the unit test:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run test __tests__/unit
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. To run the integration test:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run test __tests__/integration
+```
 
-## Deploy on Vercel
+### Test Coverage Report
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The test coverage report is automatically generated when running tests. After running `npm run test __tests__/unit` or `npm run test __tests__/integration`, you can find the coverage report in two places:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. In the terminal output
+2. In the `/coverage` directory as HTML files (open `index.html` in your browser for a detailed view)
+
+The coverage report includes:
+
+- Statement coverage
+- Branch coverage
+- Function coverage
+- Line coverage
+
+## Project Structure
+
+- `/src` - Source code
+- `/__tests__` - Test files
+- `/public` - Static assets
+- `/coverage` - Test coverage reports
+
+## Technologies Used
+
+- Next.js
+- TypeScript
+- MongoDB
+- Jest
+- React Testing Library
+- TailwindCSS

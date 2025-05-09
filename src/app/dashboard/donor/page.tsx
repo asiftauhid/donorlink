@@ -39,6 +39,7 @@ export default function DonorDashboardPage() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('requests');
   const [requests, setRequests] = useState<BloodRequest[]>([]);
+  const [allRequests, setAllRequests] = useState<BloodRequest[]>([]);
   const [donationHistory, setDonationHistory] = useState<DonationHistory[]>([]);
   const [donorData, setDonorData] = useState<DonorData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +47,7 @@ export default function DonorDashboardPage() {
   const [showThankYou, setShowThankYou] = useState<string | null>(null);
   const [formattedEligibleDate, setFormattedEligibleDate] = useState('');
   const [formattedLastDonation, setFormattedLastDonation] = useState('');
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     // Redirect if not logged in
@@ -77,6 +79,7 @@ export default function DonorDashboardPage() {
         const data = await response.json();
         setDonorData(data.donorData);
         setRequests(data.requests);
+        setAllRequests(data.requests);
         setDonationHistory(data.donationHistory);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -89,6 +92,33 @@ export default function DonorDashboardPage() {
 
     fetchDashboardData();
   }, [user, router]);
+
+  // Filter requests when filter changes
+  useEffect(() => {
+    if (!allRequests || !donorData) return;
+
+    if (filter === 'compatible') {
+      const compatibleTypes = getCompatibleBloodTypes(donorData.bloodType);
+      setRequests(allRequests.filter(request => compatibleTypes.includes(request.bloodType)));
+    } else {
+      setRequests(allRequests);
+    }
+  }, [filter, donorData, allRequests]);
+
+  // Helper function to get compatible blood types
+  const getCompatibleBloodTypes = (bloodType: string): string[] => {
+    const compatibilityMap: { [key: string]: string[] } = {
+      'A+': ['A+', 'A-', 'O+', 'O-'],
+      'A-': ['A-', 'O-'],
+      'B+': ['B+', 'B-', 'O+', 'O-'],
+      'B-': ['B-', 'O-'],
+      'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+      'AB-': ['A-', 'B-', 'AB-', 'O-'],
+      'O+': ['O+', 'O-'],
+      'O-': ['O-']
+    };
+    return compatibilityMap[bloodType] || [];
+  };
 
   useEffect(() => {
     if (donorData && donorData.eligibleToDonateSince) {
@@ -365,20 +395,17 @@ export default function DonorDashboardPage() {
                       <div className="flex space-x-3">
                         <select 
                           className="border border-gray-300 rounded-md text-sm text-gray-700 px-3 py-1.5"
+                          value={filter}
+                          onChange={(e) => setFilter(e.target.value)}
                         >
                           <option value="all">All Blood Types</option>
-                          <option value="compatible">Compatible with {donorData.bloodType}</option>
+                          <option value="compatible">Compatible with {donorData?.bloodType}</option>
                         </select>
-                        <button 
-                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 px-3 rounded-md text-sm"
-                        >
-                          Filter
-                        </button>
                       </div>
                     </div>
                     
                     <div className="space-y-4">
-                      {requests.map((request) => (
+                      {requests?.map((request) => (
                         <div key={request.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                             <div className="flex items-start space-x-4">

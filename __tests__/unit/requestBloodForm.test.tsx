@@ -1,7 +1,7 @@
 // __tests__/requestBloodForm.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import RequestBloodPage from '../src/app/request_blood/page';
+import RequestBloodPage from '../../src/app/request_blood/page';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import '@testing-library/jest-dom';
@@ -134,7 +134,11 @@ describe('RequestBloodPage', () => {
             quantity: '3',
             urgency: 'High',
             notes: 'Test notes',
+            clinicId: 'clinic1',
+            clinicName: 'Test Clinic',
+            clinicEmail: undefined
           }),
+          credentials: 'include'
         })
       );
     });
@@ -193,5 +197,117 @@ describe('RequestBloodPage', () => {
     // The form should prevent submission with negative values due to min="1" attribute
     const input = screen.getByLabelText(/Quantity \(units\)/i) as HTMLInputElement;
     expect(input.validity.valid).toBe(false);
+  });
+
+  test('handles response with request.id instead of _id', async () => {
+    // Mock auth context
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { id: 'clinic1', name: 'Test Clinic', userType: 'clinic' },
+      loading: false,
+    });
+    
+    // Mock successful form submission with id instead of _id
+    (global.fetch as jest.Mock).mockImplementationOnce(() => 
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          request: { id: 'request123' }
+        }),
+      })
+    );
+    
+    render(<RequestBloodPage />);
+    
+    // Submit the form with default values
+    fireEvent.click(screen.getByText('Submit Request'));
+    
+    // Check that we were redirected using id
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/request_details/request123');
+    });
+  });
+
+  test('handles invalid response format', async () => {
+    // Mock auth context
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { id: 'clinic1', name: 'Test Clinic', userType: 'clinic' },
+      loading: false,
+    });
+    
+    // Mock successful form submission with invalid response format
+    (global.fetch as jest.Mock).mockImplementationOnce(() => 
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          request: {} // No id or _id
+        }),
+      })
+    );
+    
+    render(<RequestBloodPage />);
+    
+    // Submit the form with default values
+    fireEvent.click(screen.getByText('Submit Request'));
+    
+    // Check that error message is shown
+    await waitFor(() => {
+      expect(screen.getByText('Invalid response format from server')).toBeInTheDocument();
+    });
+  });
+
+  test('handles missing required fields', async () => {
+    // Mock auth context
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { id: 'clinic1', name: 'Test Clinic', userType: 'clinic' },
+      loading: false,
+    });
+    
+    // Mock failed form submission
+    (global.fetch as jest.Mock).mockImplementationOnce(() => 
+      Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({
+          message: 'Missing required fields'
+        }),
+      })
+    );
+    
+    render(<RequestBloodPage />);
+    
+    // Submit the form with default values
+    fireEvent.click(screen.getByText('Submit Request'));
+    
+    // Check that error message is shown
+    await waitFor(() => {
+      expect(screen.getByText('Missing required fields')).toBeInTheDocument();
+    });
+  });
+
+  test('handles missing user fields', async () => {
+    // Mock auth context with missing fields
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { userType: 'clinic' }, // Missing id, name, and email
+      loading: false,
+    });
+    
+    // Mock failed form submission
+    (global.fetch as jest.Mock).mockImplementationOnce(() => 
+      Promise.resolve({
+        ok: false,
+        json: () => Promise.resolve({
+          message: 'Cannot read properties of undefined (reading \'json\')'
+        }),
+      })
+    );
+    
+    render(<RequestBloodPage />);
+    
+    // Submit the form
+    fireEvent.click(screen.getByText('Submit Request'));
+    
+    // Check that error message is shown
+    await waitFor(() => {
+      expect(screen.getByText('Cannot read properties of undefined (reading \'json\')')).toBeInTheDocument();
+    });
   });
 });

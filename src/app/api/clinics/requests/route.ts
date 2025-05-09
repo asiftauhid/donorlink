@@ -91,8 +91,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { bloodType, quantity, urgency, notes } = body;
     
+    // Debug logs
+    console.log('Received request body:', body);
+    console.log('Extracted fields:', { bloodType, quantity, urgency, notes });
+    
     // Validate required fields
     if (!bloodType || !quantity || !urgency) {
+      console.log('Validation failed:', { bloodType, quantity, urgency });
       return NextResponse.json(
         { message: 'Missing required fields' },
         { status: 400 }

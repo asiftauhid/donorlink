@@ -47,13 +47,34 @@ export default function RequestBloodPage() {
       setIsSubmitting(true);
       setError('');
       
+      // Validate required fields
+      if (!formData.bloodType || !formData.quantity || !formData.urgency) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Validate quantity
+      if (formData.quantity < 1) {
+        throw new Error('Quantity must be at least 1 unit');
+      }
+
+      // Debug logs
+      console.log('User object:', user);
+      console.log('Form data:', formData);
+      const requestBody = {
+        ...formData,
+        clinicId: user.id,
+        clinicName: user.name,
+        clinicEmail: user.email
+      };
+      console.log('Request body:', requestBody);
+
       const response = await fetch('/api/clinics/requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
-        credentials: 'include', // Important to include cookies for authentication
+        body: JSON.stringify(requestBody),
+        credentials: 'include',
       });
       
       const data = await response.json();
@@ -64,19 +85,15 @@ export default function RequestBloodPage() {
       
       // Extract the request ID from the response
       if (data.request && data.request._id) {
-        // Redirect to the details page for this specific request
         router.push(`/request_details/${data.request._id}`);
       } else if (data.request && data.request.id) {
-        // Some APIs might return 'id' instead of '_id'
         router.push(`/request_details/${data.request.id}`);
       } else {
-        // Fallback if ID isn't available in the expected format
-        console.error('Could not find request ID in response:', data);
-        router.push('/dashboard/clinic');
+        throw new Error('Invalid response format from server');
       }
     } catch (err) {
       console.error('Error submitting blood request:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'An error occurred while submitting the request');
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +153,11 @@ export default function RequestBloodPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <form 
+            onSubmit={handleSubmit} 
+            className="mt-8 space-y-6"
+            role="form"
+          >
             <div>
               <label htmlFor="bloodType" className="block text-sm font-medium text-gray-700">
                 Blood Type

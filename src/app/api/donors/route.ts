@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     // Handle duplicate key errors
     if (error.code === 11000) {
       return NextResponse.json(
-        { error: 'A donor with this email already exists' },
+        { error: 'A donor with this email already exists!' },
         { status: 409 }
       );
     }

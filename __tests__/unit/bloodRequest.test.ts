@@ -190,6 +190,32 @@ describe('BloodRequest Model', () => {
       expect(result).toHaveProperty('_id', 'mockId');
       expect(result).toHaveProperty('bloodType', 'O+');
     });
+
+    test('should handle invalid request data', async () => {
+      const mockCreate = jest.fn().mockRejectedValue(new Error('Invalid request data'));
+      
+      mongoose.model = jest.fn().mockReturnValue({
+        create: mockCreate,
+      });
+      
+      const invalidRequestData = {
+        clinicId: 'clinic123',
+        // Missing required fields
+        bloodType: 'O+',
+        quantity: 2,
+      };
+      
+      const createBloodRequest = async (data: any) => {
+        const BloodRequestModel = mongoose.model('BloodRequest');
+        try {
+          return await BloodRequestModel.create(data);
+        } catch (error) {
+          throw new Error('Invalid request data');
+        }
+      };
+      
+      await expect(createBloodRequest(invalidRequestData)).rejects.toThrow('Invalid request data');
+    });
     
     // Test getting blood requests
     test('getBloodRequests should return clinic\'s blood requests', async () => {
