@@ -61,20 +61,6 @@ npm run test __tests__/unit
 npm run test __tests__/integration
 ```
 
-## Running System (Cypress) Tests
-
-### Interactive Mode
-
-Launch the Cypress Test Runner UI:
-
-```bash
-npx cypress open
-```
-
-1. Select **E2E Testing**
-2. Choose a browser (e.g., **Chrome**)
-3. Run a spec file (e.g., `blood_request.cy.ts`) to test interactively
-
 ### Test Coverage Report
 
 The test coverage report is automatically generated when running tests. After running `npm run test __tests__/unit` or `npm run test __tests__/integration`, you can find the coverage report in two places:
@@ -88,6 +74,20 @@ The coverage report includes:
 - Branch coverage
 - Function coverage
 - Line coverage
+
+### Running System (Cypress) Tests
+
+### Interactive Mode
+
+Launch the Cypress Test Runner UI:
+
+```bash
+npx cypress open
+```
+
+1. Select **E2E Testing**
+2. Choose a browser (e.g., **Chrome**)
+3. Run a spec file (e.g., `blood_request.cy.ts`) to test interactively
 
 ## Project Structure
 
